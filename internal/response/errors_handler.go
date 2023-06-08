@@ -3,15 +3,11 @@ package response
 import (
 	"encoding/json"
 	"net/http"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func HandleError(err Error, w http.ResponseWriter) {
 	if err == nil {
 		w.WriteHeader(http.StatusInternalServerError)
-
-		log.Panic("empty exception")
 
 		return
 	}

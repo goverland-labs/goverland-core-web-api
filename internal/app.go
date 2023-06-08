@@ -1,11 +1,16 @@
 package internal
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/s-larionov/process-manager"
+	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/goverland-labs/core-api/protobuf/internalapi"
+	"google.golang.org/grpc"
 
 	"github.com/goverland-labs/core-web-api/internal/config"
 	"github.com/goverland-labs/core-web-api/internal/rest"
@@ -72,8 +77,17 @@ func (a *Application) initServices() error {
 }
 
 func (a *Application) initRestAPI() error {
+	conn, err := grpc.Dial(
+		a.cfg.InternalAPI.CoreStorageAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("create connection with internal api address: %v", err)
+	}
+	dc := internalapi.NewDaoClient(conn)
+
 	handlers := []apihandlers.APIHandler{
-		apihandlers.NewDaoHandler(),
+		apihandlers.NewDaoHandler(dc),
 	}
 
 	a.manager.AddWorker(process.NewServerWorker("rest-API", rest.NewRestServer(a.cfg.REST, handlers)))
