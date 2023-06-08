@@ -8,6 +8,8 @@ import (
 	"github.com/s-larionov/process-manager"
 
 	"github.com/goverland-labs/core-web-api/internal/config"
+	"github.com/goverland-labs/core-web-api/internal/rest"
+	apihandlers "github.com/goverland-labs/core-web-api/internal/rest/handlers"
 	"github.com/goverland-labs/core-web-api/pkg/health"
 	"github.com/goverland-labs/core-web-api/pkg/prometheus"
 )
@@ -47,7 +49,7 @@ func (a *Application) bootstrap() error {
 		a.initServices,
 
 		// Init Workers: Application
-		// TODO
+		a.initRestAPI,
 
 		// Init Workers: System
 		a.initPrometheusWorker,
@@ -65,6 +67,16 @@ func (a *Application) bootstrap() error {
 
 func (a *Application) initServices() error {
 	// TODO
+
+	return nil
+}
+
+func (a *Application) initRestAPI() error {
+	handlers := []apihandlers.APIHandler{
+		apihandlers.NewDaoHandler(),
+	}
+
+	a.manager.AddWorker(process.NewServerWorker("rest-API", rest.NewRestServer(a.cfg.REST, handlers)))
 
 	return nil
 }
