@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/core-web-api/internal/response"
+	forms "github.com/goverland-labs/core-web-api/internal/rest/form/dao"
 	"github.com/goverland-labs/core-web-api/internal/rest/models/dao"
 )
 
@@ -24,13 +25,14 @@ func NewDaoHandler(dc internalapi.DaoClient) APIHandler {
 
 func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/dao/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
+	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
 }
 
 func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	dao, err := h.dc.GetByID(r.Context(), &internalapi.DaoByIDRequest{DaoId: id})
+	resp, err := h.dc.GetByID(r.Context(), &internalapi.DaoByIDRequest{DaoId: id})
 	if err != nil {
 		log.Error().Err(err).Fields(map[string]interface{}{
 			"id": id,
@@ -42,7 +44,39 @@ func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(convertToDaoFromProto(dao.Dao))
+	_ = json.NewEncoder(w).Encode(convertToDaoFromProto(resp.Dao))
+}
+
+func (h *DAO) getListAction(w http.ResponseWriter, r *http.Request) {
+	form, verr := forms.NewGetListForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetList)
+	list, err := h.dc.GetByFilter(r.Context(), &internalapi.DaoByFilterRequest{
+		Query:    &params.Query,
+		Category: &params.Category,
+		Limit:    &params.Limit,
+		Offset:   &params.Offset,
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get dao list by filter")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	resp := make([]dao.Dao, len(list.Daos))
+	for i, info := range list.Daos {
+		resp[i] = convertToDaoFromProto(info)
+	}
+
+	response.AddPaginationHeaders(w, params.Offset, params.Limit, list.TotalCount)
+
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 func convertToDaoFromProto(info *internalapi.DaoInfo) dao.Dao {
