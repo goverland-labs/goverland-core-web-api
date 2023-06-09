@@ -85,9 +85,12 @@ func (a *Application) initRestAPI() error {
 		return fmt.Errorf("create connection with internal api address: %v", err)
 	}
 	dc := internalapi.NewDaoClient(conn)
+	pc := internalapi.NewProposalClient(conn)
+	vc := internalapi.NewVoteClient(conn)
 
 	handlers := []apihandlers.APIHandler{
 		apihandlers.NewDaoHandler(dc),
+		apihandlers.NewProposalHandler(pc, vc),
 	}
 
 	a.manager.AddWorker(process.NewServerWorker("rest-API", rest.NewRestServer(a.cfg.REST, handlers)))

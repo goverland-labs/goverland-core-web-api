@@ -24,8 +24,8 @@ func NewDaoHandler(dc internalapi.DaoClient) APIHandler {
 }
 
 func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
-	baseRouter.HandleFunc("/dao/top", h.getTopAction).Methods(http.MethodGet).Name("get_dao_top")
-	baseRouter.HandleFunc("/dao/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
+	baseRouter.HandleFunc("/daos/top", h.getTopAction).Methods(http.MethodGet).Name("get_dao_top")
+	baseRouter.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
 	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
 }
 
