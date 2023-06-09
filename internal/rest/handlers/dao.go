@@ -24,6 +24,7 @@ func NewDaoHandler(dc internalapi.DaoClient) APIHandler {
 }
 
 func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
+	baseRouter.HandleFunc("/dao/top", h.getTopAction).Methods(http.MethodGet).Name("get_dao_top")
 	baseRouter.HandleFunc("/dao/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
 	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
 }
@@ -75,6 +76,41 @@ func (h *DAO) getListAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.AddPaginationHeaders(w, params.Offset, params.Limit, list.TotalCount)
+
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func (h *DAO) getTopAction(w http.ResponseWriter, r *http.Request) {
+	form, verr := forms.NewGetTopForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetTop)
+	list, err := h.dc.GetTopByCategories(r.Context(), &internalapi.TopByCategoriesRequest{
+		Limit: params.Limit,
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get top dao")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	resp := make(dao.TopCategories)
+	for _, info := range list.GetCategories() {
+		daos := make([]dao.Dao, len(info.GetDaos()))
+		for i, details := range info.GetDaos() {
+			daos[i] = convertToDaoFromProto(details)
+		}
+
+		resp[info.GetCategory()] = dao.TopCategory{
+			TotalCount: info.GetTotalCount(),
+			List:       daos,
+		}
+	}
 
 	_ = json.NewEncoder(w).Encode(resp)
 }
