@@ -11,3 +11,4 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added skeleton app
 - Added daos handlers
 - Added proposals handlers
+- Added subscriber handlers

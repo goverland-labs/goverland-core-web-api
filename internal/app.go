@@ -77,20 +77,30 @@ func (a *Application) initServices() error {
 }
 
 func (a *Application) initRestAPI() error {
-	conn, err := grpc.Dial(
+	storageConn, err := grpc.Dial(
 		a.cfg.InternalAPI.CoreStorageAddress,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		return fmt.Errorf("create connection with internal api address: %v", err)
+		return fmt.Errorf("create connection with core storage server: %v", err)
 	}
-	dc := internalapi.NewDaoClient(conn)
-	pc := internalapi.NewProposalClient(conn)
-	vc := internalapi.NewVoteClient(conn)
+	feedConn, err := grpc.Dial(
+		a.cfg.InternalAPI.CoreFeedAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("create connection with core feed server: %v", err)
+	}
+	dc := internalapi.NewDaoClient(storageConn)
+	pc := internalapi.NewProposalClient(storageConn)
+	vc := internalapi.NewVoteClient(storageConn)
+	subscriberClient := internalapi.NewSubscriberClient(feedConn)
+	subscriptionClient := internalapi.NewSubscriptionClient(feedConn)
 
 	handlers := []apihandlers.APIHandler{
 		apihandlers.NewDaoHandler(dc),
 		apihandlers.NewProposalHandler(pc, vc),
+		apihandlers.NewSubscribeHandler(subscriberClient, subscriptionClient),
 	}
 
 	a.manager.AddWorker(process.NewServerWorker("rest-API", rest.NewRestServer(a.cfg.REST, handlers)))
