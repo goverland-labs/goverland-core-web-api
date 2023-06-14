@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 const msMultiplier = 1000
@@ -26,9 +26,9 @@ func init() {
 
 	err = prometheus.Register(requestsDuration)
 	if err != nil {
-		log.WithError(err).
-			WithField("metric", "request_duration_endpoint_milliseconds").
-			Error("unable to register prometheus metric")
+		log.Error().Err(err).
+			Fields(map[string]string{"metric": "request_duration_endpoint_milliseconds"}).
+			Msg("unable to register prometheus metric")
 	}
 
 	requestsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -38,9 +38,9 @@ func init() {
 
 	err = prometheus.Register(requestsCounter)
 	if err != nil {
-		log.WithError(err).
-			WithField("metric", "request_count_endpoint").
-			Error("unable to register prometheus metric")
+		log.Error().Err(err).
+			Fields(map[string]string{"metric": "request_count_endpoint"}).
+			Msg("unable to register prometheus metric")
 	}
 }
 
