@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.2] - 2023-06-14
+
+### Removed
+- Logrus library
+
 ## [0.0.1] - 2023-06-14
 
 ### Added
