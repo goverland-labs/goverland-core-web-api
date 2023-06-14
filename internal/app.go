@@ -1,13 +1,20 @@
 package internal
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/s-larionov/process-manager"
+	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/goverland-labs/core-api/protobuf/internalapi"
+	"google.golang.org/grpc"
 
 	"github.com/goverland-labs/core-web-api/internal/config"
+	"github.com/goverland-labs/core-web-api/internal/rest"
+	apihandlers "github.com/goverland-labs/core-web-api/internal/rest/handlers"
 	"github.com/goverland-labs/core-web-api/pkg/health"
 	"github.com/goverland-labs/core-web-api/pkg/prometheus"
 )
@@ -47,7 +54,7 @@ func (a *Application) bootstrap() error {
 		a.initServices,
 
 		// Init Workers: Application
-		// TODO
+		a.initRestAPI,
 
 		// Init Workers: System
 		a.initPrometheusWorker,
@@ -65,6 +72,38 @@ func (a *Application) bootstrap() error {
 
 func (a *Application) initServices() error {
 	// TODO
+
+	return nil
+}
+
+func (a *Application) initRestAPI() error {
+	storageConn, err := grpc.Dial(
+		a.cfg.InternalAPI.CoreStorageAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("create connection with core storage server: %v", err)
+	}
+	feedConn, err := grpc.Dial(
+		a.cfg.InternalAPI.CoreFeedAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("create connection with core feed server: %v", err)
+	}
+	dc := internalapi.NewDaoClient(storageConn)
+	pc := internalapi.NewProposalClient(storageConn)
+	vc := internalapi.NewVoteClient(storageConn)
+	subscriberClient := internalapi.NewSubscriberClient(feedConn)
+	subscriptionClient := internalapi.NewSubscriptionClient(feedConn)
+
+	handlers := []apihandlers.APIHandler{
+		apihandlers.NewDaoHandler(dc),
+		apihandlers.NewProposalHandler(pc, vc),
+		apihandlers.NewSubscribeHandler(subscriberClient, subscriptionClient),
+	}
+
+	a.manager.AddWorker(process.NewServerWorker("rest-API", rest.NewRestServer(a.cfg.REST, handlers)))
 
 	return nil
 }
