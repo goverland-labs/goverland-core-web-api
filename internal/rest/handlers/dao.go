@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/core-api/protobuf/internalapi"
@@ -57,11 +58,13 @@ func (h *DAO) getListAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetList)
+	daos := strings.Split(params.Daos, ",")
 	list, err := h.dc.GetByFilter(r.Context(), &internalapi.DaoByFilterRequest{
 		Query:    &params.Query,
 		Category: &params.Category,
 		Limit:    &params.Limit,
 		Offset:   &params.Offset,
+		DaoIds:   daos,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get dao list by filter")
