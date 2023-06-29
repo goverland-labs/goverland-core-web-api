@@ -13,6 +13,7 @@ type GetList struct {
 
 	Query    string
 	Category string
+	Daos     string
 }
 
 func NewGetListForm() *GetList {
@@ -24,6 +25,7 @@ func (f *GetList) ParseAndValidate(r *http.Request) (form.Former, response.Error
 
 	f.Query = r.FormValue("query")
 	f.Category = r.FormValue("category")
+	f.Daos = r.FormValue("daos")
 	f.ValidateAndSetPagination(r, errors)
 
 	if len(errors) > 0 {
