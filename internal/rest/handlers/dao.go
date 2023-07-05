@@ -16,16 +16,19 @@ import (
 
 type DAO struct {
 	dc internalapi.DaoClient
+	fc internalapi.FeedClient
 }
 
-func NewDaoHandler(dc internalapi.DaoClient) APIHandler {
+func NewDaoHandler(dc internalapi.DaoClient, fc internalapi.FeedClient) APIHandler {
 	return &DAO{
 		dc: dc,
+		fc: fc,
 	}
 }
 
 func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/daos/top", h.getTopAction).Methods(http.MethodGet).Name("get_dao_top")
+	baseRouter.HandleFunc("/daos/{id}/feed", h.getFeedByIDAction).Methods(http.MethodGet).Name("get_dao_feed_by_id")
 	baseRouter.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
 	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
 }
@@ -47,6 +50,69 @@ func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(convertToDaoFromProto(resp.Dao))
+}
+
+func (h *DAO) getFeedByIDAction(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	form, verr := forms.NewGetFeedForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetFeed)
+	resp, err := h.fc.GetByFilter(r.Context(), &internalapi.FeedByFilterRequest{
+		DaoId:  &id,
+		Types:  []string{"proposal"}, // todo: move to api
+		Limit:  &params.Limit,
+		Offset: &params.Offset,
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(map[string]interface{}{
+			"id": id,
+		}).Msg("get feed by dao")
+
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	list := make([]dao.FeedItem, len(resp.Items))
+	for i, fi := range resp.Items {
+		list[i] = convertToFeedItemFromProto(fi)
+	}
+
+	response.AddPaginationHeaders(w, params.Offset, params.Limit, resp.TotalCount)
+	_ = json.NewEncoder(w).Encode(list)
+}
+
+func convertToFeedItemFromProto(fi *internalapi.FeedInfo) dao.FeedItem {
+	return dao.FeedItem{
+		ID:           fi.GetId(),
+		CreatedAt:    fi.GetCreatedAt().AsTime(),
+		UpdatedAt:    fi.GetUpdatedAt().AsTime(),
+		DaoID:        fi.GetDaoId(),
+		ProposalID:   fi.GetProposalId(),
+		DiscussionID: fi.GetDiscussionId(),
+		Type:         convertProtType(fi.GetType()),
+		Action:       fi.GetAction(),
+		Snapshot:     fi.GetSnapshot().Value,
+	}
+}
+
+// todo: move to constant
+func convertProtType(ft internalapi.FeedInfo_Type) string {
+	switch ft {
+	case internalapi.FeedInfo_TYPE_PROPOSAL:
+		return "proposal"
+	case internalapi.FeedInfo_TYPE_DAO:
+		return "dao"
+	default:
+		return "unspecified"
+	}
 }
 
 func (h *DAO) getListAction(w http.ResponseWriter, r *http.Request) {

@@ -96,9 +96,10 @@ func (a *Application) initRestAPI() error {
 	vc := internalapi.NewVoteClient(storageConn)
 	subscriberClient := internalapi.NewSubscriberClient(feedConn)
 	subscriptionClient := internalapi.NewSubscriptionClient(feedConn)
+	fc := internalapi.NewFeedClient(feedConn)
 
 	handlers := []apihandlers.APIHandler{
-		apihandlers.NewDaoHandler(dc),
+		apihandlers.NewDaoHandler(dc, fc),
 		apihandlers.NewProposalHandler(pc, vc),
 		apihandlers.NewSubscribeHandler(subscriberClient, subscriptionClient),
 	}
