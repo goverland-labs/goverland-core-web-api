@@ -65,6 +65,7 @@ func (h *Proposal) getListAction(w http.ResponseWriter, r *http.Request) {
 		Category: &params.Category,
 		Limit:    &params.Limit,
 		Offset:   &params.Offset,
+		Title:    &params.Title,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get proposal list by filter")
