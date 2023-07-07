@@ -13,6 +13,7 @@ type GetList struct {
 
 	Dao      string
 	Category string
+	Title    string
 }
 
 func NewGetListForm() *GetList {
@@ -24,6 +25,7 @@ func (f *GetList) ParseAndValidate(r *http.Request) (form.Former, response.Error
 
 	f.Dao = r.FormValue("dao")
 	f.Category = r.FormValue("category")
+	f.Title = r.FormValue("title")
 	f.ValidateAndSetPagination(r, errors)
 
 	if len(errors) > 0 {
@@ -39,6 +41,7 @@ func (f *GetList) ConvertToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"dao":      f.Dao,
 		"category": f.Category,
+		"title":    f.Title,
 		"offset":   f.Offset,
 		"limit":    f.Limit,
 	}
