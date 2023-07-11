@@ -27,6 +27,7 @@ func NewProposalHandler(pc internalapi.ProposalClient, vc internalapi.VoteClient
 }
 
 func (h *Proposal) EnrichRoutes(baseRouter *mux.Router) {
+	baseRouter.HandleFunc("/proposals/top", h.getTopAction).Methods(http.MethodGet).Name("get_proposals_top")
 	baseRouter.HandleFunc("/proposals/{id}/votes", h.getVotesAction).Methods(http.MethodGet).Name("get_proposal_votes")
 	baseRouter.HandleFunc("/proposals/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_proposal_by_id")
 	baseRouter.HandleFunc("/proposals", h.getListAction).Methods(http.MethodGet).Name("get_proposals_list")
@@ -69,6 +70,38 @@ func (h *Proposal) getListAction(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get proposal list by filter")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	resp := make([]proposal.Proposal, len(list.GetProposals()))
+	for i, info := range list.GetProposals() {
+		resp[i] = convertToProposalFromProto(info)
+	}
+
+	response.AddPaginationHeaders(w, params.Offset, params.Limit, list.TotalCount)
+
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func (h *Proposal) getTopAction(w http.ResponseWriter, r *http.Request) {
+	form, verr := forms.NewGetTopForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetTop)
+	order := "votes"
+	list, err := h.pc.GetByFilter(r.Context(), &internalapi.ProposalByFilterRequest{
+		Limit:  &params.Limit,
+		Offset: &params.Offset,
+		Order:  &order,
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get proposal top by filter")
 		response.HandleError(response.ResolveError(err), w)
 
 		return

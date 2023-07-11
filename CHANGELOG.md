@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Proposal top endpoint
+
 ## [0.0.5] - 2023-07-07
 
 ### Added
