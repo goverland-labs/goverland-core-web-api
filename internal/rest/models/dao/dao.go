@@ -5,8 +5,9 @@ import "time"
 type Categories []string
 
 type Strategy struct {
-	Name    string `json:"name"`
-	Network string `json:"network"`
+	Name    string                 `json:"name"`
+	Network string                 `json:"network"`
+	Params  map[string]interface{} `json:"params"`
 }
 
 type Strategies []Strategy
@@ -32,6 +33,7 @@ type Voting struct {
 
 type Dao struct {
 	ID             string     `json:"id"`
+	Alias          string     `json:"alias"`
 	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at"`
 	Name           string     `json:"name"`

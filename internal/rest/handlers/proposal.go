@@ -199,9 +199,13 @@ func convertToProposalStrategiesFromProto(info []*internalapi.Strategy) proposal
 	res := make(proposal.Strategies, len(info))
 
 	for i, details := range info {
+		var params map[string]interface{}
+		_ = json.Unmarshal(details.GetParams(), &params)
+
 		res[i] = proposal.Strategy{
 			Name:    details.GetName(),
 			Network: details.GetNetwork(),
+			Params:  params,
 		}
 	}
 

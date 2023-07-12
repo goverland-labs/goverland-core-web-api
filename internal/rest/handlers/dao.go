@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/core-api/protobuf/internalapi"
@@ -124,13 +123,12 @@ func (h *DAO) getListAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetList)
-	daos := strings.Split(params.Daos, ",")
 	list, err := h.dc.GetByFilter(r.Context(), &internalapi.DaoByFilterRequest{
-		Query:    &params.Query,
-		Category: &params.Category,
+		Query:    params.Query,
+		Category: params.Category,
 		Limit:    &params.Limit,
 		Offset:   &params.Offset,
-		DaoIds:   daos,
+		DaoIds:   params.DAOs,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get dao list by filter")
@@ -187,6 +185,7 @@ func (h *DAO) getTopAction(w http.ResponseWriter, r *http.Request) {
 func convertToDaoFromProto(info *internalapi.DaoInfo) dao.Dao {
 	return dao.Dao{
 		ID:             info.GetId(),
+		Alias:          info.GetAlias(),
 		CreatedAt:      info.GetCreatedAt().AsTime(),
 		UpdatedAt:      info.GetUpdatedAt().AsTime(),
 		Name:           info.GetName(),
@@ -220,9 +219,13 @@ func convertToStrategiesFromProto(info []*internalapi.Strategy) dao.Strategies {
 	res := make(dao.Strategies, len(info))
 
 	for i, details := range info {
+		var params map[string]interface{}
+		_ = json.Unmarshal(details.GetParams(), &params)
+
 		res[i] = dao.Strategy{
 			Name:    details.GetName(),
 			Network: details.GetNetwork(),
+			Params:  params,
 		}
 	}
 

@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed getting DAO list from core storage service
+- Fixed missed params in DAO and Strategy models
+
 ## [0.0.6] - 2023-07-11
 
 ### Added

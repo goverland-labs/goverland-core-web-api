@@ -7,8 +7,9 @@ type Choices []string
 type Scores []float32
 
 type Strategy struct {
-	Name    string `json:"name"`
-	Network string `json:"network"`
+	Name    string                 `json:"name"`
+	Network string                 `json:"network"`
+	Params  map[string]interface{} `json:"params"`
 }
 
 type Strategies []Strategy
