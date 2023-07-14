@@ -103,6 +103,7 @@ func convertToFeedItemFromProto(fi *internalapi.FeedInfo) dao.FeedItem {
 		Type:         convertProtoType(fi.GetType()),
 		Action:       fi.GetAction(),
 		Snapshot:     fi.GetSnapshot().Value,
+		Timeline:     convertTimelineFromProto(fi.GetTimeline()),
 	}
 }
 
@@ -116,6 +117,40 @@ func convertProtoType(ft internalapi.FeedInfo_Type) string {
 	default:
 		return "unspecified"
 	}
+}
+
+func convertTimelineFromProto(timeline []*internalapi.FeedTimelineItem) []dao.TimelineItem {
+	converted := make([]dao.TimelineItem, 0, len(timeline))
+
+	for _, t := range timeline {
+		converted = append(converted, dao.TimelineItem{
+			CreatedAt: t.GetCreatedAt().AsTime(),
+			Action:    convertTimelineActionProto(t.GetAction()),
+		})
+	}
+
+	return converted
+}
+
+var timelineActionMap = map[internalapi.FeedTimelineItem_TimelineAction]dao.TimelineAction{
+	internalapi.FeedTimelineItem_DaoCreated:                  dao.DaoCreated,
+	internalapi.FeedTimelineItem_DaoUpdated:                  dao.DaoUpdated,
+	internalapi.FeedTimelineItem_ProposalCreated:             dao.ProposalCreated,
+	internalapi.FeedTimelineItem_ProposalUpdated:             dao.ProposalUpdated,
+	internalapi.FeedTimelineItem_ProposalVotingStartsSoon:    dao.ProposalVotingStartsSoon,
+	internalapi.FeedTimelineItem_ProposalVotingStarted:       dao.ProposalVotingStarted,
+	internalapi.FeedTimelineItem_ProposalVotingQuorumReached: dao.ProposalVotingQuorumReached,
+	internalapi.FeedTimelineItem_ProposalVotingEnded:         dao.ProposalVotingEnded,
+}
+
+func convertTimelineActionProto(action internalapi.FeedTimelineItem_TimelineAction) dao.TimelineAction {
+	converted, exists := timelineActionMap[action]
+	if !exists {
+		log.Warn().Str("action", action.String()).Msg("unknown timeline action")
+		return dao.None
+	}
+
+	return converted
 }
 
 func (h *DAO) getListAction(w http.ResponseWriter, r *http.Request) {
