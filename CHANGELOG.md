@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Updated core-api protocol to v0.0.10
+- Fixed type mismatched fields
+
 ## [0.0.7] - 2023-07-12
 
 ### Fixed

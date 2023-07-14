@@ -47,8 +47,6 @@ func ResolveError(err error) Error {
 
 func enrichErrDetails(err parametrizedError, st *status.Status) {
 	err.SetError(GeneralErrorKey, errs.WrongValue, st.Message())
-
-	return
 }
 
 // IsInternalError returns false when the error is caused by invalid request data or by other mismatches caused by an user.

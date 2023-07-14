@@ -1,6 +1,10 @@
 package dao
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Categories []string
 
@@ -32,7 +36,7 @@ type Voting struct {
 }
 
 type Dao struct {
-	ID             string     `json:"id"`
+	ID             uuid.UUID  `json:"id"`
 	Alias          string     `json:"alias"`
 	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at"`

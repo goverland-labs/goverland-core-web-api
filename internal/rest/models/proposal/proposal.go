@@ -1,6 +1,10 @@
 package proposal
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Choices []string
 
@@ -21,7 +25,7 @@ type Proposal struct {
 	Ipfs          string     `json:"ipfs"`
 	Author        string     `json:"author"`
 	Created       uint64     `json:"created"`
-	DaoID         string     `json:"dao_id"`
+	DaoID         uuid.UUID  `json:"dao_id"`
 	Network       string     `json:"network"`
 	Symbol        string     `json:"symbol"`
 	Type          string     `json:"type"`

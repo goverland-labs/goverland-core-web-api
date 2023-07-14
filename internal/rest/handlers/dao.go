@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/core-api/protobuf/internalapi"
 	"github.com/rs/zerolog/log"
@@ -89,25 +90,28 @@ func (h *DAO) getFeedByIDAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func convertToFeedItemFromProto(fi *internalapi.FeedInfo) dao.FeedItem {
+	itemID, _ := uuid.Parse(fi.GetId())
+	daoID, _ := uuid.Parse(fi.GetDaoId())
+
 	return dao.FeedItem{
-		ID:           fi.GetId(),
+		ID:           itemID,
 		CreatedAt:    fi.GetCreatedAt().AsTime(),
 		UpdatedAt:    fi.GetUpdatedAt().AsTime(),
-		DaoID:        fi.GetDaoId(),
+		DaoID:        daoID,
 		ProposalID:   fi.GetProposalId(),
 		DiscussionID: fi.GetDiscussionId(),
-		Type:         convertProtType(fi.GetType()),
+		Type:         convertProtoType(fi.GetType()),
 		Action:       fi.GetAction(),
 		Snapshot:     fi.GetSnapshot().Value,
 	}
 }
 
 // todo: move to constant
-func convertProtType(ft internalapi.FeedInfo_Type) string {
+func convertProtoType(ft internalapi.FeedInfo_Type) string {
 	switch ft {
-	case internalapi.FeedInfo_TYPE_PROPOSAL:
+	case internalapi.FeedInfo_Proposal:
 		return "proposal"
-	case internalapi.FeedInfo_TYPE_DAO:
+	case internalapi.FeedInfo_DAO:
 		return "dao"
 	default:
 		return "unspecified"
@@ -183,8 +187,10 @@ func (h *DAO) getTopAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func convertToDaoFromProto(info *internalapi.DaoInfo) dao.Dao {
+	id, _ := uuid.Parse(info.GetId())
+
 	return dao.Dao{
-		ID:             info.GetId(),
+		ID:             id,
 		Alias:          info.GetAlias(),
 		CreatedAt:      info.GetCreatedAt().AsTime(),
 		UpdatedAt:      info.GetUpdatedAt().AsTime(),

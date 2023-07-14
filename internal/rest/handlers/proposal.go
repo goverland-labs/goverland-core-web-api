@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/core-api/protobuf/internalapi"
 	"github.com/rs/zerolog/log"
@@ -163,6 +164,8 @@ func convertToProposalVoteFromProto(info *internalapi.VoteInfo) proposal.Vote {
 }
 
 func convertToProposalFromProto(info *internalapi.ProposalInfo) proposal.Proposal {
+	daoID, _ := uuid.Parse(info.GetDaoId())
+
 	return proposal.Proposal{
 		ID:            info.GetId(),
 		CreatedAt:     info.GetCreatedAt().AsTime(),
@@ -170,7 +173,7 @@ func convertToProposalFromProto(info *internalapi.ProposalInfo) proposal.Proposa
 		Ipfs:          info.GetIpfs(),
 		Author:        info.GetAuthor(),
 		Created:       info.GetCreated(),
-		DaoID:         info.GetDaoId(),
+		DaoID:         daoID,
 		Network:       info.GetNetwork(),
 		Symbol:        info.GetSymbol(),
 		Type:          info.GetType(),
