@@ -218,6 +218,7 @@ func convertToDaoFromProto(info *internalapi.DaoInfo) dao.Dao {
 		Guidelines:     info.GetGuidelines(),
 		Template:       info.GetTemplate(),
 		ParentID:       info.GetParentId(),
+		ActivitySince:  info.GetActivitySince(),
 	}
 }
 
