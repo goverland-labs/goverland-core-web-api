@@ -33,8 +33,8 @@ type FeedItem struct {
 }
 
 type TimelineItem struct {
-	CreatedAt time.Time `json:"created_at"`
-	Action    TimelineAction
+	CreatedAt time.Time      `json:"created_at"`
+	Action    TimelineAction `json:"action"`
 }
 
 type TimelineAction string
