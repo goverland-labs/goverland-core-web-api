@@ -154,12 +154,18 @@ func (h *Proposal) getVotesAction(w http.ResponseWriter, r *http.Request) {
 
 func convertToProposalVoteFromProto(info *internalapi.VoteInfo) proposal.Vote {
 	return proposal.Vote{
-		ID:         info.GetId(),
-		Ipfs:       info.GetIpfs(),
-		ProposalID: info.GetProposalId(),
-		Voter:      info.GetVoter(),
-		Created:    info.GetCreated(),
-		Reason:     info.GetReason(),
+		ID:           info.GetId(),
+		Ipfs:         info.GetIpfs(),
+		DaoID:        uuid.MustParse(info.GetDaoId()),
+		ProposalID:   info.GetProposalId(),
+		Voter:        info.GetVoter(),
+		Created:      info.GetCreated(),
+		Reason:       info.GetReason(),
+		Choice:       int(info.GetChoice()),
+		App:          info.GetApp(),
+		Vp:           info.GetVp(),
+		VpByStrategy: info.GetVpByStrategy(),
+		VpState:      info.GetVpState(),
 	}
 }
 
