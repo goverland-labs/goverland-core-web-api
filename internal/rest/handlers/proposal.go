@@ -9,9 +9,8 @@ import (
 	"github.com/goverland-labs/core-api/protobuf/internalapi"
 	"github.com/rs/zerolog/log"
 
-	forms "github.com/goverland-labs/core-web-api/internal/rest/form/proposal"
-
 	"github.com/goverland-labs/core-web-api/internal/response"
+	forms "github.com/goverland-labs/core-web-api/internal/rest/form/proposal"
 	"github.com/goverland-labs/core-web-api/internal/rest/models/proposal"
 )
 
@@ -201,6 +200,7 @@ func convertToProposalFromProto(info *internalapi.ProposalInfo) proposal.Proposa
 		ScoresTotal:   info.GetScoresTotal(),
 		ScoresUpdated: info.GetScoresUpdated(),
 		Votes:         info.GetVotes(),
+		Timeline:      convertProposalTimelineFromProto(info.GetTimeline()),
 	}
 }
 
@@ -219,4 +219,40 @@ func convertToProposalStrategiesFromProto(info []*internalapi.Strategy) proposal
 	}
 
 	return res
+}
+
+func convertProposalTimelineFromProto(timeline []*internalapi.ProposalTimelineItem) []proposal.TimelineItem {
+	if len(timeline) == 0 {
+		return nil
+	}
+
+	converted := make([]proposal.TimelineItem, 0, len(timeline))
+
+	for _, t := range timeline {
+		converted = append(converted, proposal.TimelineItem{
+			CreatedAt: t.GetCreatedAt().AsTime(),
+			Action:    convertProposalTimelineActionProto(t.GetAction()),
+		})
+	}
+
+	return converted
+}
+
+var proposalTimelineActionMap = map[internalapi.ProposalTimelineItem_TimelineAction]proposal.TimelineAction{
+	internalapi.ProposalTimelineItem_ProposalCreated:             proposal.Created,
+	internalapi.ProposalTimelineItem_ProposalUpdated:             proposal.Updated,
+	internalapi.ProposalTimelineItem_ProposalVotingStartsSoon:    proposal.VotingStartsSoon,
+	internalapi.ProposalTimelineItem_ProposalVotingStarted:       proposal.VotingStarted,
+	internalapi.ProposalTimelineItem_ProposalVotingQuorumReached: proposal.VotingQuorumReached,
+	internalapi.ProposalTimelineItem_ProposalVotingEnded:         proposal.VotingEnded,
+}
+
+func convertProposalTimelineActionProto(action internalapi.ProposalTimelineItem_TimelineAction) proposal.TimelineAction {
+	converted, exists := proposalTimelineActionMap[action]
+	if !exists {
+		log.Warn().Str("action", action.String()).Msg("unknown timeline action")
+		return proposal.None
+	}
+
+	return converted
 }
