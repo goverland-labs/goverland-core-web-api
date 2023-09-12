@@ -160,7 +160,7 @@ func convertToProposalVoteFromProto(info *internalapi.VoteInfo) proposal.Vote {
 		Voter:        info.GetVoter(),
 		Created:      info.GetCreated(),
 		Reason:       info.GetReason(),
-		Choice:       int(info.GetChoice()),
+		Choice:       info.GetChoice().GetValue(),
 		App:          info.GetApp(),
 		Vp:           info.GetVp(),
 		VpByStrategy: info.GetVpByStrategy(),
