@@ -94,11 +94,11 @@ func (h *Proposal) getTopAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetTop)
-	order := "votes"
+	top := true
 	list, err := h.pc.GetByFilter(r.Context(), &internalapi.ProposalByFilterRequest{
 		Limit:  &params.Limit,
 		Offset: &params.Offset,
-		Order:  &order,
+		Top:    &top,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get proposal top by filter")
