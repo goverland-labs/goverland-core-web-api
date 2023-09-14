@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Feed endpoint to get feed by filters
+
 ## [0.0.15] - 2023-09-12
 
 ### Changed
