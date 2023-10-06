@@ -242,6 +242,7 @@ var proposalTimelineActionMap = map[internalapi.ProposalTimelineItem_TimelineAct
 	internalapi.ProposalTimelineItem_ProposalCreated:             proposal.Created,
 	internalapi.ProposalTimelineItem_ProposalUpdated:             proposal.Updated,
 	internalapi.ProposalTimelineItem_ProposalVotingStartsSoon:    proposal.VotingStartsSoon,
+	internalapi.ProposalTimelineItem_ProposalVotingEndsSoon:      proposal.VotingEndsSoon,
 	internalapi.ProposalTimelineItem_ProposalVotingStarted:       proposal.VotingStarted,
 	internalapi.ProposalTimelineItem_ProposalVotingQuorumReached: proposal.VotingQuorumReached,
 	internalapi.ProposalTimelineItem_ProposalVotingEnded:         proposal.VotingEnded,
