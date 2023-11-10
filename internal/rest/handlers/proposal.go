@@ -32,7 +32,7 @@ func (h *Proposal) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/proposals/{id}/votes", h.getVotesAction).Methods(http.MethodGet).Name("get_proposal_votes")
 	baseRouter.HandleFunc("/proposals/{id}/votes/validate", h.validateVote).Methods(http.MethodPost).Name("proposal_vote_validate")
 	baseRouter.HandleFunc("/proposals/{id}/votes/prepare", h.prepareVote).Methods(http.MethodPost).Name("proposal_vote_prepare")
-	baseRouter.HandleFunc("/proposals/{id}/votes/vote", h.vote).Methods(http.MethodPost).Name("proposal_vote")
+	baseRouter.HandleFunc("/proposals/{id}/votes", h.vote).Methods(http.MethodPost).Name("proposal_vote")
 	baseRouter.HandleFunc("/proposals/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_proposal_by_id")
 	baseRouter.HandleFunc("/proposals", h.getListAction).Methods(http.MethodGet).Name("get_proposals_list")
 }
