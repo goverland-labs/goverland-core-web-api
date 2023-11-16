@@ -32,7 +32,7 @@ func (h *Proposal) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/proposals/{id}/votes", h.getVotesAction).Methods(http.MethodGet).Name("get_proposal_votes")
 	baseRouter.HandleFunc("/proposals/{id}/votes/validate", h.validateVote).Methods(http.MethodPost).Name("proposal_vote_validate")
 	baseRouter.HandleFunc("/proposals/{id}/votes/prepare", h.prepareVote).Methods(http.MethodPost).Name("proposal_vote_prepare")
-	baseRouter.HandleFunc("/proposals/{id}/votes", h.vote).Methods(http.MethodPost).Name("proposal_vote")
+	baseRouter.HandleFunc("/proposals/votes", h.vote).Methods(http.MethodPost).Name("proposal_vote")
 	baseRouter.HandleFunc("/proposals/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_proposal_by_id")
 	baseRouter.HandleFunc("/proposals", h.getListAction).Methods(http.MethodGet).Name("get_proposals_list")
 }
@@ -223,6 +223,7 @@ func (h *Proposal) prepareVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	votePreparation := proposal.VotePreparation{
+		ID:        prepareResponse.GetId(),
 		TypedData: prepareResponse.GetTypedData(),
 	}
 
@@ -230,9 +231,6 @@ func (h *Proposal) prepareVote(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Proposal) vote(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	proposalID := vars["id"]
-
 	form, verr := forms.NewVoteForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
@@ -242,13 +240,8 @@ func (h *Proposal) vote(w http.ResponseWriter, r *http.Request) {
 
 	params := form.(*forms.Vote)
 	voteResponse, err := h.vc.Vote(r.Context(), &internalapi.VoteRequest{
-		Voter:    string(params.Voter),
-		Proposal: proposalID,
-		Choice: &protoany.Any{
-			Value: params.Choice,
-		},
-		Reason: params.Reason,
-		Sig:    params.Sig,
+		Id:  params.ID,
+		Sig: params.Sig,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("vote proposal")
