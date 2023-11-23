@@ -288,6 +288,7 @@ func convertToProposalFromProto(info *internalapi.ProposalInfo) proposal.Proposa
 		UpdatedAt:     info.GetUpdatedAt().AsTime(),
 		Ipfs:          info.GetIpfs(),
 		Author:        info.GetAuthor(),
+		EnsName:       info.GetEnsName(),
 		Created:       info.GetCreated(),
 		DaoID:         daoID,
 		Network:       info.GetNetwork(),
