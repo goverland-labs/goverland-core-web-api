@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	protoany "github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/core-api/protobuf/internalapi"
@@ -29,6 +30,9 @@ func NewProposalHandler(pc internalapi.ProposalClient, vc internalapi.VoteClient
 func (h *Proposal) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/proposals/top", h.getTopAction).Methods(http.MethodGet).Name("get_proposals_top")
 	baseRouter.HandleFunc("/proposals/{id}/votes", h.getVotesAction).Methods(http.MethodGet).Name("get_proposal_votes")
+	baseRouter.HandleFunc("/proposals/{id}/votes/validate", h.validateVote).Methods(http.MethodPost).Name("proposal_vote_validate")
+	baseRouter.HandleFunc("/proposals/{id}/votes/prepare", h.prepareVote).Methods(http.MethodPost).Name("proposal_vote_prepare")
+	baseRouter.HandleFunc("/proposals/votes", h.vote).Methods(http.MethodPost).Name("proposal_vote")
 	baseRouter.HandleFunc("/proposals/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_proposal_by_id")
 	baseRouter.HandleFunc("/proposals", h.getListAction).Methods(http.MethodGet).Name("get_proposals_list")
 }
@@ -149,6 +153,113 @@ func (h *Proposal) getVotesAction(w http.ResponseWriter, r *http.Request) {
 	response.AddPaginationHeaders(w, params.Offset, params.Limit, list.TotalCount)
 
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func (h *Proposal) validateVote(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	proposalID := vars["id"]
+
+	form, verr := forms.NewValidateVoteForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.ValidateVote)
+	validateResponse, err := h.vc.Validate(r.Context(), &internalapi.ValidateRequest{
+		Voter:    string(params.Voter),
+		Proposal: proposalID,
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("validate proposal vote")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	var voteValidationError *proposal.VoteValidationError
+	if validateResponse.GetValidationError() != nil {
+		voteValidationError = &proposal.VoteValidationError{
+			Message: validateResponse.GetValidationError().GetMessage(),
+			Code:    validateResponse.GetValidationError().GetCode(),
+		}
+	}
+
+	voteValidation := proposal.VoteValidation{
+		OK:                  validateResponse.GetOk(),
+		VotingPower:         validateResponse.GetVotingPower(),
+		VoteValidationError: voteValidationError,
+	}
+
+	_ = json.NewEncoder(w).Encode(voteValidation)
+}
+
+func (h *Proposal) prepareVote(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	proposalID := vars["id"]
+
+	form, verr := forms.NewPrepareVoteForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.PrepareVote)
+	prepareResponse, err := h.vc.Prepare(r.Context(), &internalapi.PrepareRequest{
+		Voter:    string(params.Voter),
+		Proposal: proposalID,
+		Choice: &protoany.Any{
+			Value: params.Choice,
+		},
+		Reason: params.Reason,
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("prepare proposal vote")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	votePreparation := proposal.VotePreparation{
+		ID:        prepareResponse.GetId(),
+		TypedData: prepareResponse.GetTypedData(),
+	}
+
+	_ = json.NewEncoder(w).Encode(votePreparation)
+}
+
+func (h *Proposal) vote(w http.ResponseWriter, r *http.Request) {
+	form, verr := forms.NewVoteForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.Vote)
+	voteResponse, err := h.vc.Vote(r.Context(), &internalapi.VoteRequest{
+		Id:  params.ID,
+		Sig: params.Sig,
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("vote proposal")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	successfulVote := proposal.SuccessfulVote{
+		ID:   voteResponse.GetId(),
+		IPFS: voteResponse.GetIpfs(),
+		Relayer: proposal.Relayer{
+			Address: voteResponse.GetRelayer().GetAddress(),
+			Receipt: voteResponse.GetRelayer().GetReceipt(),
+		},
+	}
+
+	_ = json.NewEncoder(w).Encode(successfulVote)
 }
 
 func convertToProposalVoteFromProto(info *internalapi.VoteInfo) proposal.Vote {
