@@ -42,6 +42,7 @@ type Proposal struct {
 	UpdatedAt     time.Time      `json:"updated_at"`
 	Ipfs          string         `json:"ipfs"`
 	Author        string         `json:"author"`
+	EnsName       string         `json:"ens_name"`
 	Created       uint64         `json:"created"`
 	DaoID         uuid.UUID      `json:"dao_id"`
 	Network       string         `json:"network"`
