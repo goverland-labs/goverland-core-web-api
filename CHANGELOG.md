@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### [0.0.21] - 2023-12-14
+
 ### Added
 - Author ens name field for votes
 
