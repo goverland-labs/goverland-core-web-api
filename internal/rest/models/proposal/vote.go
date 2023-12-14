@@ -12,6 +12,7 @@ type Vote struct {
 	DaoID        uuid.UUID       `json:"dao_id"`
 	ProposalID   string          `json:"proposal_id"`
 	Voter        string          `json:"voter"`
+	EnsName      string          `json:"ens_name"`
 	Created      uint64          `json:"created"`
 	Reason       string          `json:"reason"`
 	Choice       json.RawMessage `json:"choice"`

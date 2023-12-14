@@ -269,6 +269,7 @@ func convertToProposalVoteFromProto(info *internalapi.VoteInfo) proposal.Vote {
 		DaoID:        uuid.MustParse(info.GetDaoId()),
 		ProposalID:   info.GetProposalId(),
 		Voter:        info.GetVoter(),
+		EnsName:      info.GetEnsName(),
 		Created:      info.GetCreated(),
 		Reason:       info.GetReason(),
 		Choice:       info.GetChoice().GetValue(),
