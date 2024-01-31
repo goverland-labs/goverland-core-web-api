@@ -66,11 +66,12 @@ func (h *Proposal) getListAction(w http.ResponseWriter, r *http.Request) {
 
 	params := form.(*forms.GetList)
 	list, err := h.pc.GetByFilter(r.Context(), &internalapi.ProposalByFilterRequest{
-		Dao:      &params.Dao,
-		Category: &params.Category,
-		Limit:    &params.Limit,
-		Offset:   &params.Offset,
-		Title:    &params.Title,
+		Dao:         &params.Dao,
+		Category:    &params.Category,
+		Limit:       &params.Limit,
+		Offset:      &params.Offset,
+		Title:       &params.Title,
+		ProposalIds: params.Proposals,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get proposal list by filter")
@@ -134,9 +135,9 @@ func (h *Proposal) getVotesAction(w http.ResponseWriter, r *http.Request) {
 
 	params := form.(*forms.GetVotes)
 	list, err := h.vc.GetVotes(r.Context(), &internalapi.VotesFilterRequest{
-		ProposalId: id,
-		Limit:      &params.Limit,
-		Offset:     &params.Offset,
+		ProposalIds: []string{id},
+		Limit:       &params.Limit,
+		Offset:      &params.Offset,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get proposal votes")

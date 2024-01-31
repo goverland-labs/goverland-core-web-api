@@ -103,6 +103,7 @@ func (a *Application) initRestAPI() error {
 		apihandlers.NewProposalHandler(pc, vc),
 		apihandlers.NewSubscribeHandler(subscriberClient, subscriptionClient),
 		apihandlers.NewFeedHandler(fc),
+		apihandlers.NewVotesHandler(vc),
 	}
 
 	a.manager.AddWorker(process.NewServerWorker("rest-API", rest.NewRestServer(a.cfg.REST, handlers)))

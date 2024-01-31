@@ -2,6 +2,7 @@ package proposal
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/goverland-labs/core-web-api/internal/response"
 	"github.com/goverland-labs/core-web-api/internal/rest/form"
@@ -11,9 +12,10 @@ import (
 type GetList struct {
 	helpers.Pagination
 
-	Dao      string
-	Category string
-	Title    string
+	Dao       string
+	Category  string
+	Title     string
+	Proposals []string
 }
 
 func NewGetListForm() *GetList {
@@ -26,6 +28,11 @@ func (f *GetList) ParseAndValidate(r *http.Request) (form.Former, response.Error
 	f.Dao = r.FormValue("dao")
 	f.Category = r.FormValue("category")
 	f.Title = r.FormValue("title")
+	idsString := strings.TrimSpace(r.FormValue("proposals"))
+	if idsString != "" {
+		ids := strings.Split(idsString, ",")
+		f.Proposals = ids
+	}
 	f.ValidateAndSetPagination(r, errors)
 
 	if len(errors) > 0 {
