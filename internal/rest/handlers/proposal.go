@@ -135,9 +135,10 @@ func (h *Proposal) getVotesAction(w http.ResponseWriter, r *http.Request) {
 
 	params := form.(*forms.GetVotes)
 	list, err := h.vc.GetVotes(r.Context(), &internalapi.VotesFilterRequest{
-		ProposalIds: []string{id},
-		Limit:       &params.Limit,
-		Offset:      &params.Offset,
+		ProposalIds:  []string{id},
+		OrderByVoter: &params.Voter,
+		Limit:        &params.Limit,
+		Offset:       &params.Offset,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get proposal votes")
