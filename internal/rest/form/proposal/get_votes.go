@@ -10,6 +10,8 @@ import (
 
 type GetVotes struct {
 	helpers.Pagination
+
+	Voter string
 }
 
 func NewGetVotesForm() *GetVotes {
@@ -26,12 +28,14 @@ func (f *GetVotes) ParseAndValidate(r *http.Request) (form.Former, response.Erro
 
 		return nil, ve
 	}
+	f.Voter = r.FormValue("voter")
 
 	return f, nil
 }
 
 func (f *GetVotes) ConvertToMap() map[string]interface{} {
 	return map[string]interface{}{
+		"voter":  f.Voter,
 		"offset": f.Offset,
 		"limit":  f.Limit,
 	}
