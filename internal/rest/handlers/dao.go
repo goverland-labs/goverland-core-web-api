@@ -255,6 +255,8 @@ func convertToDaoFromProto(info *internalapi.DaoInfo) dao.Dao {
 		ParentID:       info.GetParentId(),
 		ActivitySince:  info.GetActivitySince(),
 		VotersCount:    info.GetVotersCount(),
+		ActiveVotes:    info.GetActiveVotes(),
+		Verified:       info.Verified,
 	}
 }
 
