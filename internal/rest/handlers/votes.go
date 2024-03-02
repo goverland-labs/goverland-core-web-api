@@ -9,9 +9,9 @@ import (
 	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/core-web-api/internal/response"
-	forms "github.com/goverland-labs/core-web-api/internal/rest/form/common"
-	"github.com/goverland-labs/core-web-api/internal/rest/models/proposal"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response"
+	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/common"
+	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/proposal"
 )
 
 type Votes struct {

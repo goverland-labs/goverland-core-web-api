@@ -1,11 +1,11 @@
-module github.com/goverland-labs/core-web-api
+module github.com/goverland-labs/goverland-core-web-api
 
 go 1.21
 
 toolchain go1.22.0
 
 require (
-	github.com/caarlos0/env/v6 v6.10.1
+	github.com/caarlos0/env/v10 v10.0.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.1

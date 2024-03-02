@@ -13,11 +13,11 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/goverland-labs/core-web-api/internal/config"
-	"github.com/goverland-labs/core-web-api/internal/rest"
-	apihandlers "github.com/goverland-labs/core-web-api/internal/rest/handlers"
-	"github.com/goverland-labs/core-web-api/pkg/health"
-	"github.com/goverland-labs/core-web-api/pkg/prometheus"
+	"github.com/goverland-labs/goverland-core-web-api/internal/config"
+	"github.com/goverland-labs/goverland-core-web-api/internal/rest"
+	apihandlers "github.com/goverland-labs/goverland-core-web-api/internal/rest/handlers"
+	"github.com/goverland-labs/goverland-core-web-api/pkg/health"
+	"github.com/goverland-labs/goverland-core-web-api/pkg/prometheus"
 )
 
 type Application struct {

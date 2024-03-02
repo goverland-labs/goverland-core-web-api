@@ -8,9 +8,9 @@ import (
 	"github.com/goverland-labs/goverland-core-feed/protocol/feedpb"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/core-web-api/internal/response"
-	forms "github.com/goverland-labs/core-web-api/internal/rest/form/feed"
-	"github.com/goverland-labs/core-web-api/internal/rest/models/dao"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response"
+	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/feed"
+	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/dao"
 )
 
 type Feed struct {

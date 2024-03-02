@@ -3,7 +3,7 @@ package form
 import (
 	"net/http"
 
-	"github.com/goverland-labs/core-web-api/internal/response"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response"
 )
 
 type Former interface {

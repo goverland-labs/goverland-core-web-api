@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v10"
 	"github.com/rs/zerolog"
 	"github.com/s-larionov/process-manager"
 	"github.com/shopspring/decimal"
 
-	"github.com/goverland-labs/core-web-api/internal"
-	"github.com/goverland-labs/core-web-api/internal/config"
-	"github.com/goverland-labs/core-web-api/internal/logger"
+	"github.com/goverland-labs/goverland-core-web-api/internal"
+	"github.com/goverland-labs/goverland-core-web-api/internal/config"
+	"github.com/goverland-labs/goverland-core-web-api/internal/logger"
 )
 
 const decimalDivisionPrecision = 32

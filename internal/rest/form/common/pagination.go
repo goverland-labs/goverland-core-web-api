@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/goverland-labs/core-web-api/internal/response"
-	"github.com/goverland-labs/core-web-api/internal/response/errs"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response/errs"
 )
 
 const (

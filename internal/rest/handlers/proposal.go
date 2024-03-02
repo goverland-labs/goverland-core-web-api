@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 
-	protoany "github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/core-web-api/internal/response"
-	forms "github.com/goverland-labs/core-web-api/internal/rest/form/proposal"
-	"github.com/goverland-labs/core-web-api/internal/rest/models/proposal"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response"
+	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/proposal"
+	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/proposal"
 )
 
 type Proposal struct {
@@ -212,7 +212,7 @@ func (h *Proposal) prepareVote(w http.ResponseWriter, r *http.Request) {
 	prepareResponse, err := h.vc.Prepare(r.Context(), &storagepb.PrepareRequest{
 		Voter:    string(params.Voter),
 		Proposal: proposalID,
-		Choice: &protoany.Any{
+		Choice: &any.Any{
 			Value: params.Choice,
 		},
 		Reason: params.Reason,

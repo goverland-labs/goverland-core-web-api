@@ -10,10 +10,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/goverland-labs/core-web-api/internal/response"
-	forms "github.com/goverland-labs/core-web-api/internal/rest/form/subscribe"
-	"github.com/goverland-labs/core-web-api/internal/rest/helpers"
-	"github.com/goverland-labs/core-web-api/internal/rest/models/subscribe"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response"
+	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/subscribe"
+	"github.com/goverland-labs/goverland-core-web-api/internal/rest/helpers"
+	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/subscribe"
 )
 
 type Subscriber struct {
