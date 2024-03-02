@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/goverland-labs/core-api/protobuf/internalapi"
+	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/core-web-api/internal/response"
@@ -15,10 +15,10 @@ import (
 )
 
 type Votes struct {
-	vc internalapi.VoteClient
+	vc storagepb.VoteClient
 }
 
-func NewVotesHandler(vc internalapi.VoteClient) APIHandler {
+func NewVotesHandler(vc storagepb.VoteClient) APIHandler {
 	return &Votes{
 		vc: vc,
 	}
@@ -40,7 +40,7 @@ func (h *Votes) getUserVotesAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetUserVotes)
-	var list, err = h.vc.GetVotes(r.Context(), &internalapi.VotesFilterRequest{
+	var list, err = h.vc.GetVotes(r.Context(), &storagepb.VotesFilterRequest{
 		ProposalIds: params.Proposals,
 		Voter:       &address,
 		Limit:       &params.Limit,
@@ -63,7 +63,7 @@ func (h *Votes) getUserVotesAction(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-func convertToVoteFromProto(info *internalapi.VoteInfo) proposal.Vote {
+func convertToVoteFromProto(info *storagepb.VoteInfo) proposal.Vote {
 	return proposal.Vote{
 		ID:           info.GetId(),
 		Ipfs:         info.GetIpfs(),

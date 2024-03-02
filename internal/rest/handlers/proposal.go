@@ -7,7 +7,7 @@ import (
 	protoany "github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/goverland-labs/core-api/protobuf/internalapi"
+	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/core-web-api/internal/response"
@@ -16,11 +16,11 @@ import (
 )
 
 type Proposal struct {
-	pc internalapi.ProposalClient
-	vc internalapi.VoteClient
+	pc storagepb.ProposalClient
+	vc storagepb.VoteClient
 }
 
-func NewProposalHandler(pc internalapi.ProposalClient, vc internalapi.VoteClient) APIHandler {
+func NewProposalHandler(pc storagepb.ProposalClient, vc storagepb.VoteClient) APIHandler {
 	return &Proposal{
 		pc: pc,
 		vc: vc,
@@ -41,7 +41,7 @@ func (h *Proposal) getByIDAction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	resp, err := h.pc.GetByID(r.Context(), &internalapi.ProposalByIDRequest{ProposalId: id})
+	resp, err := h.pc.GetByID(r.Context(), &storagepb.ProposalByIDRequest{ProposalId: id})
 	if err != nil {
 		log.Error().Err(err).Fields(map[string]interface{}{
 			"id": id,
@@ -65,7 +65,7 @@ func (h *Proposal) getListAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetList)
-	list, err := h.pc.GetByFilter(r.Context(), &internalapi.ProposalByFilterRequest{
+	list, err := h.pc.GetByFilter(r.Context(), &storagepb.ProposalByFilterRequest{
 		Dao:         &params.Dao,
 		Category:    &params.Category,
 		Limit:       &params.Limit,
@@ -100,7 +100,7 @@ func (h *Proposal) getTopAction(w http.ResponseWriter, r *http.Request) {
 
 	params := form.(*forms.GetTop)
 	top := true
-	list, err := h.pc.GetByFilter(r.Context(), &internalapi.ProposalByFilterRequest{
+	list, err := h.pc.GetByFilter(r.Context(), &storagepb.ProposalByFilterRequest{
 		Limit:  &params.Limit,
 		Offset: &params.Offset,
 		Top:    &top,
@@ -134,7 +134,7 @@ func (h *Proposal) getVotesAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetVotes)
-	list, err := h.vc.GetVotes(r.Context(), &internalapi.VotesFilterRequest{
+	list, err := h.vc.GetVotes(r.Context(), &storagepb.VotesFilterRequest{
 		ProposalIds:  []string{id},
 		OrderByVoter: &params.Voter,
 		Limit:        &params.Limit,
@@ -169,7 +169,7 @@ func (h *Proposal) validateVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.ValidateVote)
-	validateResponse, err := h.vc.Validate(r.Context(), &internalapi.ValidateRequest{
+	validateResponse, err := h.vc.Validate(r.Context(), &storagepb.ValidateRequest{
 		Voter:    string(params.Voter),
 		Proposal: proposalID,
 	})
@@ -209,7 +209,7 @@ func (h *Proposal) prepareVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.PrepareVote)
-	prepareResponse, err := h.vc.Prepare(r.Context(), &internalapi.PrepareRequest{
+	prepareResponse, err := h.vc.Prepare(r.Context(), &storagepb.PrepareRequest{
 		Voter:    string(params.Voter),
 		Proposal: proposalID,
 		Choice: &protoany.Any{
@@ -241,7 +241,7 @@ func (h *Proposal) vote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.Vote)
-	voteResponse, err := h.vc.Vote(r.Context(), &internalapi.VoteRequest{
+	voteResponse, err := h.vc.Vote(r.Context(), &storagepb.VoteRequest{
 		Id:  params.ID,
 		Sig: params.Sig,
 	})
@@ -264,7 +264,7 @@ func (h *Proposal) vote(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(successfulVote)
 }
 
-func convertToProposalVoteFromProto(info *internalapi.VoteInfo) proposal.Vote {
+func convertToProposalVoteFromProto(info *storagepb.VoteInfo) proposal.Vote {
 	return proposal.Vote{
 		ID:           info.GetId(),
 		Ipfs:         info.GetIpfs(),
@@ -282,7 +282,7 @@ func convertToProposalVoteFromProto(info *internalapi.VoteInfo) proposal.Vote {
 	}
 }
 
-func convertToProposalFromProto(info *internalapi.ProposalInfo) proposal.Proposal {
+func convertToProposalFromProto(info *storagepb.ProposalInfo) proposal.Proposal {
 	daoID, _ := uuid.Parse(info.GetDaoId())
 
 	return proposal.Proposal{
@@ -319,7 +319,7 @@ func convertToProposalFromProto(info *internalapi.ProposalInfo) proposal.Proposa
 	}
 }
 
-func convertToProposalStrategiesFromProto(info []*internalapi.Strategy) proposal.Strategies {
+func convertToProposalStrategiesFromProto(info []*storagepb.Strategy) proposal.Strategies {
 	res := make(proposal.Strategies, len(info))
 
 	for i, details := range info {
@@ -336,7 +336,7 @@ func convertToProposalStrategiesFromProto(info []*internalapi.Strategy) proposal
 	return res
 }
 
-func convertProposalTimelineFromProto(timeline []*internalapi.ProposalTimelineItem) []proposal.TimelineItem {
+func convertProposalTimelineFromProto(timeline []*storagepb.ProposalTimelineItem) []proposal.TimelineItem {
 	if len(timeline) == 0 {
 		return nil
 	}
@@ -353,17 +353,17 @@ func convertProposalTimelineFromProto(timeline []*internalapi.ProposalTimelineIt
 	return converted
 }
 
-var proposalTimelineActionMap = map[internalapi.ProposalTimelineItem_TimelineAction]proposal.TimelineAction{
-	internalapi.ProposalTimelineItem_ProposalCreated:             proposal.Created,
-	internalapi.ProposalTimelineItem_ProposalUpdated:             proposal.Updated,
-	internalapi.ProposalTimelineItem_ProposalVotingStartsSoon:    proposal.VotingStartsSoon,
-	internalapi.ProposalTimelineItem_ProposalVotingEndsSoon:      proposal.VotingEndsSoon,
-	internalapi.ProposalTimelineItem_ProposalVotingStarted:       proposal.VotingStarted,
-	internalapi.ProposalTimelineItem_ProposalVotingQuorumReached: proposal.VotingQuorumReached,
-	internalapi.ProposalTimelineItem_ProposalVotingEnded:         proposal.VotingEnded,
+var proposalTimelineActionMap = map[storagepb.ProposalTimelineItem_TimelineAction]proposal.TimelineAction{
+	storagepb.ProposalTimelineItem_ProposalCreated:             proposal.Created,
+	storagepb.ProposalTimelineItem_ProposalUpdated:             proposal.Updated,
+	storagepb.ProposalTimelineItem_ProposalVotingStartsSoon:    proposal.VotingStartsSoon,
+	storagepb.ProposalTimelineItem_ProposalVotingEndsSoon:      proposal.VotingEndsSoon,
+	storagepb.ProposalTimelineItem_ProposalVotingStarted:       proposal.VotingStarted,
+	storagepb.ProposalTimelineItem_ProposalVotingQuorumReached: proposal.VotingQuorumReached,
+	storagepb.ProposalTimelineItem_ProposalVotingEnded:         proposal.VotingEnded,
 }
 
-func convertProposalTimelineActionProto(action internalapi.ProposalTimelineItem_TimelineAction) proposal.TimelineAction {
+func convertProposalTimelineActionProto(action storagepb.ProposalTimelineItem_TimelineAction) proposal.TimelineAction {
 	converted, exists := proposalTimelineActionMap[action]
 	if !exists {
 		log.Warn().Str("action", action.String()).Msg("unknown timeline action")

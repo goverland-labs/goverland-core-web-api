@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/goverland-labs/core-api/protobuf/internalapi"
+	"github.com/goverland-labs/goverland-core-feed/protocol/feedpb"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/metadata"
 
@@ -17,11 +17,11 @@ import (
 )
 
 type Subscriber struct {
-	subscribers   internalapi.SubscriberClient
-	subscriptions internalapi.SubscriptionClient
+	subscribers   feedpb.SubscriberClient
+	subscriptions feedpb.SubscriptionClient
 }
 
-func NewSubscribeHandler(subscribers internalapi.SubscriberClient, subscriptions internalapi.SubscriptionClient) *Subscriber {
+func NewSubscribeHandler(subscribers feedpb.SubscriberClient, subscriptions feedpb.SubscriptionClient) *Subscriber {
 	return &Subscriber{
 		subscribers:   subscribers,
 		subscriptions: subscriptions,
@@ -44,7 +44,7 @@ func (h *Subscriber) createSubscriberAction(w http.ResponseWriter, r *http.Reque
 	}
 
 	params := form.(*forms.SubscribeForm)
-	resp, err := h.subscribers.Create(r.Context(), &internalapi.CreateSubscriberRequest{WebhookUrl: params.WebhookURL})
+	resp, err := h.subscribers.Create(r.Context(), &feedpb.CreateSubscriberRequest{WebhookUrl: params.WebhookURL})
 	if err != nil {
 		log.Error().Err(err).Msg("create subscriber")
 
@@ -75,7 +75,7 @@ func (h *Subscriber) updateSubscriberAction(w http.ResponseWriter, r *http.Reque
 	}
 
 	params := form.(*forms.SubscribeForm)
-	_, err := h.subscribers.Update(prepareOutgoingContext(r.Context(), r.Header), &internalapi.UpdateSubscriberRequest{WebhookUrl: params.WebhookURL})
+	_, err := h.subscribers.Update(prepareOutgoingContext(r.Context(), r.Header), &feedpb.UpdateSubscriberRequest{WebhookUrl: params.WebhookURL})
 	if err != nil {
 		log.Error().Err(err).Msg("update subscriber")
 
@@ -96,7 +96,7 @@ func (h *Subscriber) subscribeOnDaoAction(w http.ResponseWriter, r *http.Request
 	}
 
 	params := form.(*forms.SubscribeOnDaoForm)
-	_, err := h.subscriptions.Subscribe(prepareOutgoingContext(r.Context(), r.Header), &internalapi.SubscribeRequest{
+	_, err := h.subscriptions.Subscribe(prepareOutgoingContext(r.Context(), r.Header), &feedpb.SubscribeRequest{
 		DaoId: params.DaoID,
 	})
 	if err != nil {
@@ -119,7 +119,7 @@ func (h *Subscriber) unsubscribeOnDaoAction(w http.ResponseWriter, r *http.Reque
 	}
 
 	params := form.(*forms.UnsubscribeOnDaoForm)
-	_, err := h.subscriptions.Unsubscribe(prepareOutgoingContext(r.Context(), r.Header), &internalapi.UnsubscribeRequest{
+	_, err := h.subscriptions.Unsubscribe(prepareOutgoingContext(r.Context(), r.Header), &feedpb.UnsubscribeRequest{
 		DaoId: params.DaoID,
 	})
 	if err != nil {

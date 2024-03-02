@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/goverland-labs/core-api/protobuf/internalapi"
+	"github.com/goverland-labs/goverland-core-feed/protocol/feedpb"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/core-web-api/internal/response"
@@ -14,10 +14,10 @@ import (
 )
 
 type Feed struct {
-	fc internalapi.FeedClient
+	fc feedpb.FeedClient
 }
 
-func NewFeedHandler(fc internalapi.FeedClient) APIHandler {
+func NewFeedHandler(fc feedpb.FeedClient) APIHandler {
 	return &Feed{
 		fc: fc,
 	}
@@ -36,7 +36,7 @@ func (h *Feed) getFeedByFiltersAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetFeedList)
-	resp, err := h.fc.GetByFilter(r.Context(), &internalapi.FeedByFilterRequest{
+	resp, err := h.fc.GetByFilter(r.Context(), &feedpb.FeedByFilterRequest{
 		DaoIds:   params.DaoList,
 		Types:    params.Types,
 		Actions:  params.Actions,

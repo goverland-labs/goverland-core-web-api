@@ -6,10 +6,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/goverland-labs/goverland-core-feed/protocol/feedpb"
+	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/s-larionov/process-manager"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/goverland-labs/core-api/protobuf/internalapi"
 	"google.golang.org/grpc"
 
 	"github.com/goverland-labs/core-web-api/internal/config"
@@ -77,26 +78,23 @@ func (a *Application) initServices() error {
 }
 
 func (a *Application) initRestAPI() error {
-	storageConn, err := grpc.Dial(
-		a.cfg.InternalAPI.CoreStorageAddress,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	storageConn, err := grpc.Dial(a.cfg.InternalAPI.CoreStorageAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("create connection with core storage server: %v", err)
 	}
-	feedConn, err := grpc.Dial(
-		a.cfg.InternalAPI.CoreFeedAddress,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+
+	dc := storagepb.NewDaoClient(storageConn)
+	pc := storagepb.NewProposalClient(storageConn)
+	vc := storagepb.NewVoteClient(storageConn)
+
+	feedConn, err := grpc.Dial(a.cfg.InternalAPI.CoreFeedAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("create connection with core feed server: %v", err)
 	}
-	dc := internalapi.NewDaoClient(storageConn)
-	pc := internalapi.NewProposalClient(storageConn)
-	vc := internalapi.NewVoteClient(storageConn)
-	subscriberClient := internalapi.NewSubscriberClient(feedConn)
-	subscriptionClient := internalapi.NewSubscriptionClient(feedConn)
-	fc := internalapi.NewFeedClient(feedConn)
+
+	subscriberClient := feedpb.NewSubscriberClient(feedConn)
+	subscriptionClient := feedpb.NewSubscriptionClient(feedConn)
+	fc := feedpb.NewFeedClient(feedConn)
 
 	handlers := []apihandlers.APIHandler{
 		apihandlers.NewDaoHandler(dc, fc),
