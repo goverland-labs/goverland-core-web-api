@@ -11,6 +11,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Updated all internal dependencies
 - Changed the path name of the go module
 
+### Added
+- Added LICENSE information
+
 ## [0.0.24] - 2024-02-06
 
 ### Added
