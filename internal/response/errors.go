@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/goverland-labs/core-web-api/internal/response/errs"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response/errs"
 )
 
 const (

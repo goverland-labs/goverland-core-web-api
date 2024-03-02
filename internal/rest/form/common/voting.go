@@ -3,8 +3,8 @@ package common
 import (
 	"encoding/json"
 
-	"github.com/goverland-labs/core-web-api/internal/response"
-	"github.com/goverland-labs/core-web-api/internal/response/errs"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response/errs"
 )
 
 type Voter string
@@ -23,7 +23,7 @@ func (v *Voter) ValidateAndSet(voter string, errors map[string]response.ErrorMes
 type Choice json.RawMessage
 
 func (c *Choice) ValidateAndSet(choice json.RawMessage, errors map[string]response.ErrorMessage) {
-	if choice == nil || len(choice) == 0 {
+	if len(choice) == 0 {
 		errors["choice"] = response.ErrorMessage{
 			Code:    errs.MissedValue,
 			Message: "missing choice",

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/goverland-labs/core-web-api/internal/response"
-	"github.com/goverland-labs/core-web-api/internal/rest/form"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response"
+	"github.com/goverland-labs/goverland-core-web-api/internal/rest/form"
 )
 
 type GetUserVotes struct {

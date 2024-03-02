@@ -7,12 +7,12 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
-	"github.com/goverland-labs/core-web-api/internal/response"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response"
 
-	apihandlers "github.com/goverland-labs/core-web-api/internal/rest/handlers"
+	apihandlers "github.com/goverland-labs/goverland-core-web-api/internal/rest/handlers"
 
-	"github.com/goverland-labs/core-web-api/internal/config"
-	"github.com/goverland-labs/core-web-api/pkg/middleware"
+	"github.com/goverland-labs/goverland-core-web-api/internal/config"
+	"github.com/goverland-labs/goverland-core-web-api/pkg/middleware"
 )
 
 func NewRestServer(cfg config.REST, apiHandlers []apihandlers.APIHandler) *http.Server {

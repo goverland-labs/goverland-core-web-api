@@ -6,20 +6,21 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/goverland-labs/core-api/protobuf/internalapi"
+	"github.com/goverland-labs/goverland-core-feed/protocol/feedpb"
+	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/core-web-api/internal/response"
-	forms "github.com/goverland-labs/core-web-api/internal/rest/form/dao"
-	"github.com/goverland-labs/core-web-api/internal/rest/models/dao"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response"
+	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/dao"
+	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/dao"
 )
 
 type DAO struct {
-	dc internalapi.DaoClient
-	fc internalapi.FeedClient
+	dc storagepb.DaoClient
+	fc feedpb.FeedClient
 }
 
-func NewDaoHandler(dc internalapi.DaoClient, fc internalapi.FeedClient) APIHandler {
+func NewDaoHandler(dc storagepb.DaoClient, fc feedpb.FeedClient) APIHandler {
 	return &DAO{
 		dc: dc,
 		fc: fc,
@@ -37,7 +38,7 @@ func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	resp, err := h.dc.GetByID(r.Context(), &internalapi.DaoByIDRequest{DaoId: id})
+	resp, err := h.dc.GetByID(r.Context(), &storagepb.DaoByIDRequest{DaoId: id})
 	if err != nil {
 		log.Error().Err(err).Fields(map[string]interface{}{
 			"id": id,
@@ -64,7 +65,7 @@ func (h *DAO) getFeedByIDAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetFeed)
-	resp, err := h.fc.GetByFilter(r.Context(), &internalapi.FeedByFilterRequest{
+	resp, err := h.fc.GetByFilter(r.Context(), &feedpb.FeedByFilterRequest{
 		DaoId:  &id,
 		Types:  []string{"proposal"}, // todo: move to api
 		Limit:  &params.Limit,
@@ -89,7 +90,7 @@ func (h *DAO) getFeedByIDAction(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(list)
 }
 
-func convertToFeedItemFromProto(fi *internalapi.FeedInfo) dao.FeedItem {
+func convertToFeedItemFromProto(fi *feedpb.FeedInfo) dao.FeedItem {
 	itemID, _ := uuid.Parse(fi.GetId())
 	daoID, _ := uuid.Parse(fi.GetDaoId())
 
@@ -108,18 +109,18 @@ func convertToFeedItemFromProto(fi *internalapi.FeedInfo) dao.FeedItem {
 }
 
 // todo: move to constant
-func convertProtoType(ft internalapi.FeedInfo_Type) string {
+func convertProtoType(ft feedpb.FeedInfo_Type) string {
 	switch ft {
-	case internalapi.FeedInfo_Proposal:
+	case feedpb.FeedInfo_Proposal:
 		return "proposal"
-	case internalapi.FeedInfo_DAO:
+	case feedpb.FeedInfo_DAO:
 		return "dao"
 	default:
 		return "unspecified"
 	}
 }
 
-func convertTimelineFromProto(timeline []*internalapi.FeedTimelineItem) []dao.TimelineItem {
+func convertTimelineFromProto(timeline []*feedpb.FeedTimelineItem) []dao.TimelineItem {
 	converted := make([]dao.TimelineItem, 0, len(timeline))
 
 	for _, t := range timeline {
@@ -132,18 +133,18 @@ func convertTimelineFromProto(timeline []*internalapi.FeedTimelineItem) []dao.Ti
 	return converted
 }
 
-var timelineActionMap = map[internalapi.FeedTimelineItem_TimelineAction]dao.TimelineAction{
-	internalapi.FeedTimelineItem_DaoCreated:                  dao.DaoCreated,
-	internalapi.FeedTimelineItem_DaoUpdated:                  dao.DaoUpdated,
-	internalapi.FeedTimelineItem_ProposalCreated:             dao.ProposalCreated,
-	internalapi.FeedTimelineItem_ProposalUpdated:             dao.ProposalUpdated,
-	internalapi.FeedTimelineItem_ProposalVotingStartsSoon:    dao.ProposalVotingStartsSoon,
-	internalapi.FeedTimelineItem_ProposalVotingStarted:       dao.ProposalVotingStarted,
-	internalapi.FeedTimelineItem_ProposalVotingQuorumReached: dao.ProposalVotingQuorumReached,
-	internalapi.FeedTimelineItem_ProposalVotingEnded:         dao.ProposalVotingEnded,
+var timelineActionMap = map[feedpb.FeedTimelineItem_TimelineAction]dao.TimelineAction{
+	feedpb.FeedTimelineItem_DaoCreated:                  dao.DaoCreated,
+	feedpb.FeedTimelineItem_DaoUpdated:                  dao.DaoUpdated,
+	feedpb.FeedTimelineItem_ProposalCreated:             dao.ProposalCreated,
+	feedpb.FeedTimelineItem_ProposalUpdated:             dao.ProposalUpdated,
+	feedpb.FeedTimelineItem_ProposalVotingStartsSoon:    dao.ProposalVotingStartsSoon,
+	feedpb.FeedTimelineItem_ProposalVotingStarted:       dao.ProposalVotingStarted,
+	feedpb.FeedTimelineItem_ProposalVotingQuorumReached: dao.ProposalVotingQuorumReached,
+	feedpb.FeedTimelineItem_ProposalVotingEnded:         dao.ProposalVotingEnded,
 }
 
-func convertTimelineActionProto(action internalapi.FeedTimelineItem_TimelineAction) dao.TimelineAction {
+func convertTimelineActionProto(action feedpb.FeedTimelineItem_TimelineAction) dao.TimelineAction {
 	converted, exists := timelineActionMap[action]
 	if !exists {
 		log.Warn().Str("action", action.String()).Msg("unknown timeline action")
@@ -162,7 +163,7 @@ func (h *DAO) getListAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetList)
-	list, err := h.dc.GetByFilter(r.Context(), &internalapi.DaoByFilterRequest{
+	list, err := h.dc.GetByFilter(r.Context(), &storagepb.DaoByFilterRequest{
 		Query:    params.Query,
 		Category: params.Category,
 		Limit:    &params.Limit,
@@ -195,7 +196,7 @@ func (h *DAO) getTopAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetTop)
-	list, err := h.dc.GetTopByCategories(r.Context(), &internalapi.TopByCategoriesRequest{
+	list, err := h.dc.GetTopByCategories(r.Context(), &storagepb.TopByCategoriesRequest{
 		Limit: params.Limit,
 	})
 	if err != nil {
@@ -221,7 +222,7 @@ func (h *DAO) getTopAction(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-func convertToDaoFromProto(info *internalapi.DaoInfo) dao.Dao {
+func convertToDaoFromProto(info *storagepb.DaoInfo) dao.Dao {
 	id, _ := uuid.Parse(info.GetId())
 
 	return dao.Dao{
@@ -260,7 +261,7 @@ func convertToDaoFromProto(info *internalapi.DaoInfo) dao.Dao {
 	}
 }
 
-func convertToStrategiesFromProto(info []*internalapi.Strategy) dao.Strategies {
+func convertToStrategiesFromProto(info []*storagepb.Strategy) dao.Strategies {
 	res := make(dao.Strategies, len(info))
 
 	for i, details := range info {
@@ -277,7 +278,7 @@ func convertToStrategiesFromProto(info []*internalapi.Strategy) dao.Strategies {
 	return res
 }
 
-func convertToTreasuresFromProto(info []*internalapi.Treasury) dao.Treasuries {
+func convertToTreasuresFromProto(info []*storagepb.Treasury) dao.Treasuries {
 	res := make(dao.Treasuries, len(info))
 
 	for i, details := range info {
@@ -291,7 +292,7 @@ func convertToTreasuresFromProto(info []*internalapi.Treasury) dao.Treasuries {
 	return res
 }
 
-func convertToVotingFromProto(info *internalapi.Voting) dao.Voting {
+func convertToVotingFromProto(info *storagepb.Voting) dao.Voting {
 	return dao.Voting{
 		Delay:       info.GetDelay(),
 		Period:      info.GetPeriod(),
