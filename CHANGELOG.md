@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.0] - 2024-03-02
+
 ### Changed
 - Updated all internal dependencies
 - Changed the path name of the go module
