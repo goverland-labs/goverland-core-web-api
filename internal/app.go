@@ -86,6 +86,7 @@ func (a *Application) initRestAPI() error {
 	dc := storagepb.NewDaoClient(storageConn)
 	pc := storagepb.NewProposalClient(storageConn)
 	vc := storagepb.NewVoteClient(storageConn)
+	ec := storagepb.NewEnsClient(storageConn)
 
 	feedConn, err := grpc.Dial(a.cfg.InternalAPI.CoreFeedAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -102,6 +103,7 @@ func (a *Application) initRestAPI() error {
 		apihandlers.NewSubscribeHandler(subscriberClient, subscriptionClient),
 		apihandlers.NewFeedHandler(fc),
 		apihandlers.NewVotesHandler(vc),
+		apihandlers.NewEnsHandler(ec),
 	}
 
 	a.manager.AddWorker(process.NewServerWorker("rest-API", rest.NewRestServer(a.cfg.REST, handlers)))
