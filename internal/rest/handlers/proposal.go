@@ -153,6 +153,7 @@ func (h *Proposal) getVotesAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.AddPaginationHeaders(w, params.Offset, params.Limit, list.TotalCount)
+	response.AddTotalVpHeader(w, list.TotalVp)
 
 	_ = json.NewEncoder(w).Encode(resp)
 }
