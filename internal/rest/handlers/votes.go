@@ -26,6 +26,7 @@ func NewVotesHandler(vc storagepb.VoteClient) APIHandler {
 
 func (h *Votes) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/user/{address}/votes", h.getUserVotesAction).Methods(http.MethodGet).Name("get_user_votes")
+	baseRouter.HandleFunc("/user/{address}/participated-daos", h.getUserParticipatedDaos).Methods(http.MethodGet).Name("get_user_participated_daos")
 }
 
 func (h *Votes) getUserVotesAction(w http.ResponseWriter, r *http.Request) {
@@ -61,6 +62,30 @@ func (h *Votes) getUserVotesAction(w http.ResponseWriter, r *http.Request) {
 	response.AddPaginationHeaders(w, params.Offset, params.Limit, list.TotalCount)
 	response.AddTotalVpHeader(w, list.TotalVp)
 
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func (h *Votes) getUserParticipatedDaos(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	address := vars["address"]
+
+	var list, err = h.vc.GetDaosVotedIn(r.Context(), &storagepb.DaosVotedInRequest{
+		Voter: address,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get user participated daos")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	resp := make([]uuid.UUID, len(list.GetDaoIds()))
+	for i, info := range list.GetDaoIds() {
+		id, _ := uuid.Parse(info)
+		resp[i] = id
+	}
+
+	response.AddPaginationHeaders(w, 0, list.TotalCount, list.TotalCount)
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
