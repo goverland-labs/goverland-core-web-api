@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.4] - 2024-04-10
+
+### Added
+- Daos user participates in
+
 ## [0.1.4] - 2024-03-22
 
 ### Added
