@@ -29,6 +29,7 @@ func NewDaoHandler(dc storagepb.DaoClient, fc feedpb.FeedClient) APIHandler {
 
 func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/daos/top", h.getTopAction).Methods(http.MethodGet).Name("get_dao_top")
+	baseRouter.HandleFunc("/daos/recommendations", h.getRecommendations).Methods(http.MethodGet).Name("get_dao_recommendations")
 	baseRouter.HandleFunc("/daos/{id}/feed", h.getFeedByIDAction).Methods(http.MethodGet).Name("get_dao_feed_by_id")
 	baseRouter.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
 	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
@@ -220,6 +221,30 @@ func (h *DAO) getTopAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func (h *DAO) getRecommendations(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.dc.GetRecommendationsList(r.Context(), &storagepb.GetRecommendationsListRequest{})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao recommendations")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	result := make(dao.Recommendations, 0, len(resp.List))
+	for _, info := range resp.List {
+		result = append(result, dao.Recommendation{
+			OriginalId: info.GetOriginalId(),
+			InternalId: info.GetInternalId(),
+			Name:       info.GetName(),
+			Symbol:     info.GetSymbol(),
+			NetworkId:  info.GetNetworkId(),
+			Address:    info.GetAddress(),
+		})
+	}
+
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 func convertToDaoFromProto(info *storagepb.DaoInfo) dao.Dao {
