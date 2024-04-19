@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- DAO recommendations endpoint
+- DAO popularity index
+
 ## [0.1.5] - 2024-04-10
 
 ### Added

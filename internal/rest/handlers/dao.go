@@ -29,6 +29,7 @@ func NewDaoHandler(dc storagepb.DaoClient, fc feedpb.FeedClient) APIHandler {
 
 func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/daos/top", h.getTopAction).Methods(http.MethodGet).Name("get_dao_top")
+	baseRouter.HandleFunc("/daos/recommendations", h.getRecommendations).Methods(http.MethodGet).Name("get_dao_recommendations")
 	baseRouter.HandleFunc("/daos/{id}/feed", h.getFeedByIDAction).Methods(http.MethodGet).Name("get_dao_feed_by_id")
 	baseRouter.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
 	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
@@ -222,42 +223,67 @@ func (h *DAO) getTopAction(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+func (h *DAO) getRecommendations(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.dc.GetRecommendationsList(r.Context(), &storagepb.GetRecommendationsListRequest{})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao recommendations")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	result := make(dao.Recommendations, 0, len(resp.List))
+	for _, info := range resp.List {
+		result = append(result, dao.Recommendation{
+			OriginalId: info.GetOriginalId(),
+			InternalId: info.GetInternalId(),
+			Name:       info.GetName(),
+			Symbol:     info.GetSymbol(),
+			NetworkId:  info.GetNetworkId(),
+			Address:    info.GetAddress(),
+		})
+	}
+
+	_ = json.NewEncoder(w).Encode(result)
+}
+
 func convertToDaoFromProto(info *storagepb.DaoInfo) dao.Dao {
 	id, _ := uuid.Parse(info.GetId())
 
 	return dao.Dao{
-		ID:             id,
-		Alias:          info.GetAlias(),
-		CreatedAt:      info.GetCreatedAt().AsTime(),
-		UpdatedAt:      info.GetUpdatedAt().AsTime(),
-		Name:           info.GetName(),
-		Private:        info.GetPrivate(),
-		About:          info.GetAbout(),
-		Avatar:         info.GetAvatar(),
-		Terms:          info.GetTerms(),
-		Location:       info.GetLocation(),
-		Website:        info.GetWebsite(),
-		Twitter:        info.GetTwitter(),
-		Github:         info.GetGithub(),
-		Coingecko:      info.GetCoingeko(),
-		Email:          info.GetEmail(),
-		Network:        info.GetNetwork(),
-		Symbol:         info.GetSymbol(),
-		Skin:           info.GetSkin(),
-		Domain:         info.GetDomain(),
-		Strategies:     convertToStrategiesFromProto(info.GetStrategies()),
-		Voting:         convertToVotingFromProto(info.GetVoting()),
-		Categories:     info.GetCategories(),
-		Treasures:      convertToTreasuresFromProto(info.GetTreasuries()),
-		FollowersCount: info.GetFollowersCount(),
-		ProposalsCount: info.GetProposalsCount(),
-		Guidelines:     info.GetGuidelines(),
-		Template:       info.GetTemplate(),
-		ParentID:       info.GetParentId(),
-		ActivitySince:  info.GetActivitySince(),
-		VotersCount:    info.GetVotersCount(),
-		ActiveVotes:    info.GetActiveVotes(),
-		Verified:       info.Verified,
+		ID:              id,
+		Alias:           info.GetAlias(),
+		CreatedAt:       info.GetCreatedAt().AsTime(),
+		UpdatedAt:       info.GetUpdatedAt().AsTime(),
+		Name:            info.GetName(),
+		Private:         info.GetPrivate(),
+		About:           info.GetAbout(),
+		Avatar:          info.GetAvatar(),
+		Terms:           info.GetTerms(),
+		Location:        info.GetLocation(),
+		Website:         info.GetWebsite(),
+		Twitter:         info.GetTwitter(),
+		Github:          info.GetGithub(),
+		Coingecko:       info.GetCoingeko(),
+		Email:           info.GetEmail(),
+		Network:         info.GetNetwork(),
+		Symbol:          info.GetSymbol(),
+		Skin:            info.GetSkin(),
+		Domain:          info.GetDomain(),
+		Strategies:      convertToStrategiesFromProto(info.GetStrategies()),
+		Voting:          convertToVotingFromProto(info.GetVoting()),
+		Categories:      info.GetCategories(),
+		Treasures:       convertToTreasuresFromProto(info.GetTreasuries()),
+		FollowersCount:  info.GetFollowersCount(),
+		ProposalsCount:  info.GetProposalsCount(),
+		Guidelines:      info.GetGuidelines(),
+		Template:        info.GetTemplate(),
+		ParentID:        info.GetParentId(),
+		ActivitySince:   info.GetActivitySince(),
+		VotersCount:     info.GetVotersCount(),
+		ActiveVotes:     info.GetActiveVotes(),
+		Verified:        info.Verified,
+		PopularityIndex: info.GetPopularityIndex(),
 	}
 }
 
