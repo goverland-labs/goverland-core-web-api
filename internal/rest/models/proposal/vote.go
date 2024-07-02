@@ -39,9 +39,10 @@ type VotePreparation struct {
 }
 
 type SuccessfulVote struct {
-	ID      string  `json:"id"`
-	IPFS    string  `json:"ipfs"`
-	Relayer Relayer `json:"relayer"`
+	ID         string  `json:"id"`
+	IPFS       string  `json:"ipfs"`
+	Relayer    Relayer `json:"relayer"`
+	ProposalID string  `json:"proposal_id"`
 }
 
 type Relayer struct {
