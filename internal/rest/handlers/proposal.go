@@ -260,6 +260,7 @@ func (h *Proposal) vote(w http.ResponseWriter, r *http.Request) {
 			Address: voteResponse.GetRelayer().GetAddress(),
 			Receipt: voteResponse.GetRelayer().GetReceipt(),
 		},
+		ProposalID: voteResponse.GetProposalId(),
 	}
 
 	_ = json.NewEncoder(w).Encode(successfulVote)
