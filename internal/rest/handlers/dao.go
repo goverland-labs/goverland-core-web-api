@@ -16,14 +16,16 @@ import (
 )
 
 type DAO struct {
-	dc storagepb.DaoClient
-	fc feedpb.FeedClient
+	dc             storagepb.DaoClient
+	fc             feedpb.FeedClient
+	delegateClient storagepb.DelegateClient
 }
 
-func NewDaoHandler(dc storagepb.DaoClient, fc feedpb.FeedClient) APIHandler {
+func NewDaoHandler(dc storagepb.DaoClient, fc feedpb.FeedClient, delegateClient storagepb.DelegateClient) APIHandler {
 	return &DAO{
-		dc: dc,
-		fc: fc,
+		dc:             dc,
+		fc:             fc,
+		delegateClient: delegateClient,
 	}
 }
 
@@ -33,6 +35,7 @@ func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/daos/{id}/feed", h.getFeedByIDAction).Methods(http.MethodGet).Name("get_dao_feed_by_id")
 	baseRouter.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
 	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
+	baseRouter.HandleFunc("/daos/{id}/delegates", h.getDelegates).Methods(http.MethodGet).Name("get_delegates_list")
 }
 
 func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
@@ -241,6 +244,60 @@ func (h *DAO) getRecommendations(w http.ResponseWriter, r *http.Request) {
 			Symbol:     info.GetSymbol(),
 			NetworkId:  info.GetNetworkId(),
 			Address:    info.GetAddress(),
+		})
+	}
+
+	_ = json.NewEncoder(w).Encode(result)
+}
+
+func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	daoID := vars["id"]
+
+	form, verr := forms.NewGetDelegatesForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetDelegates)
+
+	// TODO: for now we only support one address in query
+	var qAccounts []string
+	if params.Query != nil {
+		qAccounts = append(qAccounts, *params.Query)
+	}
+
+	resp, err := h.delegateClient.GetDelegates(r.Context(), &storagepb.GetDelegatesRequest{
+		DaoId:         daoID,
+		QueryAccounts: qAccounts,
+		Sort:          params.By,
+		Limit:         int32(params.Limit),
+		Offset:        int32(params.Offset),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao delegates")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	result := make([]dao.Delegate, 0, len(resp.Delegates))
+	for _, info := range resp.Delegates {
+		result = append(result, dao.Delegate{
+			Address:                  info.GetAddress(),
+			ENSName:                  info.GetEnsName(),
+			DelegatorCount:           info.GetDelegatorCount(),
+			PercentOfDelegators:      info.GetPercentOfDelegators(),
+			VotingPower:              info.GetVotingPower(),
+			PercentOfVotingPower:     info.GetPercentOfVotingPower(),
+			About:                    info.GetAbout(),
+			Statement:                info.GetStatement(),
+			UserDelegatedVotingPower: info.GetUserDelegatedVotingPower(),
+			VotesCount:               info.GetVotesCount(),
+			ProposalsCount:           info.GetProposalsCount(),
+			CreateProposalsCount:     info.GetCreateProposalsCount(),
 		})
 	}
 
