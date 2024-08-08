@@ -88,6 +88,7 @@ func (a *Application) initRestAPI() error {
 	vc := storagepb.NewVoteClient(storageConn)
 	ec := storagepb.NewEnsClient(storageConn)
 	sc := storagepb.NewStatsClient(storageConn)
+	delegateClient := storagepb.NewDelegateClient(storageConn)
 
 	feedConn, err := grpc.Dial(a.cfg.InternalAPI.CoreFeedAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -99,7 +100,7 @@ func (a *Application) initRestAPI() error {
 	fc := feedpb.NewFeedClient(feedConn)
 
 	handlers := []apihandlers.APIHandler{
-		apihandlers.NewDaoHandler(dc, fc),
+		apihandlers.NewDaoHandler(dc, fc, delegateClient),
 		apihandlers.NewProposalHandler(pc, vc),
 		apihandlers.NewSubscribeHandler(subscriberClient, subscriptionClient),
 		apihandlers.NewFeedHandler(fc),
