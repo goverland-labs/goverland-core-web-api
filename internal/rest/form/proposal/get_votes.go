@@ -12,7 +12,7 @@ type GetVotes struct {
 	helpers.Pagination
 
 	Voter string
-	Name  string
+	Query string
 }
 
 func NewGetVotesForm() *GetVotes {
@@ -30,7 +30,7 @@ func (f *GetVotes) ParseAndValidate(r *http.Request) (form.Former, response.Erro
 		return nil, ve
 	}
 	f.Voter = r.FormValue("voter")
-	f.Name = r.FormValue("name")
+	f.Query = r.FormValue("query")
 
 	return f, nil
 }
@@ -38,7 +38,7 @@ func (f *GetVotes) ParseAndValidate(r *http.Request) (form.Former, response.Erro
 func (f *GetVotes) ConvertToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"voter":  f.Voter,
-		"name":   f.Name,
+		"query":  f.Query,
 		"offset": f.Offset,
 		"limit":  f.Limit,
 	}

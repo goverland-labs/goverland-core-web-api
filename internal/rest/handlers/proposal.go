@@ -137,7 +137,7 @@ func (h *Proposal) getVotesAction(w http.ResponseWriter, r *http.Request) {
 	list, err := h.vc.GetVotes(r.Context(), &storagepb.VotesFilterRequest{
 		ProposalIds:  []string{id},
 		OrderByVoter: &params.Voter,
-		Name:         &params.Name,
+		Query:        &params.Query,
 		Limit:        &params.Limit,
 		Offset:       &params.Offset,
 	})
