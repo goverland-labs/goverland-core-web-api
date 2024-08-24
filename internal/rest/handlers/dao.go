@@ -36,6 +36,7 @@ func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
 	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
 	baseRouter.HandleFunc("/daos/{id}/delegates", h.getDelegates).Methods(http.MethodGet).Name("get_delegates_list")
+	baseRouter.HandleFunc("/daos/{id}/delegate-profile", h.getDelegateProfile).Methods(http.MethodGet).Name("get_delegate_profile")
 }
 
 func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
@@ -286,19 +287,64 @@ func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
 	result := make([]dao.Delegate, 0, len(resp.Delegates))
 	for _, info := range resp.Delegates {
 		result = append(result, dao.Delegate{
-			Address:                  info.GetAddress(),
-			ENSName:                  info.GetEnsName(),
-			DelegatorCount:           info.GetDelegatorCount(),
-			PercentOfDelegators:      info.GetPercentOfDelegators(),
-			VotingPower:              info.GetVotingPower(),
-			PercentOfVotingPower:     info.GetPercentOfVotingPower(),
-			About:                    info.GetAbout(),
-			Statement:                info.GetStatement(),
-			UserDelegatedVotingPower: info.GetUserDelegatedVotingPower(),
-			VotesCount:               info.GetVotesCount(),
-			ProposalsCount:           info.GetProposalsCount(),
-			CreateProposalsCount:     info.GetCreateProposalsCount(),
+			Address:               info.GetAddress(),
+			ENSName:               info.GetEnsName(),
+			DelegatorCount:        info.GetDelegatorCount(),
+			PercentOfDelegators:   info.GetPercentOfDelegators(),
+			VotingPower:           info.GetVotingPower(),
+			PercentOfVotingPower:  info.GetPercentOfVotingPower(),
+			About:                 info.GetAbout(),
+			Statement:             info.GetStatement(),
+			VotesCount:            info.GetVotesCount(),
+			CreatedProposalsCount: info.GetCreatedProposalsCount(),
 		})
+	}
+
+	_ = json.NewEncoder(w).Encode(result)
+}
+
+func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	daoID := vars["id"]
+
+	form, verr := forms.NewGetDelegateProfileForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetDelegateProfile)
+
+	resp, err := h.delegateClient.GetDelegateProfile(r.Context(), &storagepb.GetDelegateProfileRequest{
+		DaoId:   daoID,
+		Address: params.Address,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get delegate profile")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	delegates := make([]dao.ProfileDelegateItem, 0, len(resp.Delegates))
+	for _, info := range resp.Delegates {
+		delegates = append(delegates, dao.ProfileDelegateItem{
+			Address:        info.GetAddress(),
+			ENSName:        info.GetEnsName(),
+			Weight:         info.GetWeight(),
+			DelegatedPower: info.GetDelegatedPower(),
+		})
+	}
+
+	result := dao.DelegateProfile{
+		Address:              resp.GetAddress(),
+		VotingPower:          resp.GetVotingPower(),
+		IncomingPower:        resp.GetIncomingPower(),
+		OutgoingPower:        resp.GetOutgoingPower(),
+		PercentOfVotingPower: resp.GetPercentOfVotingPower(),
+		PercentOfDelegators:  resp.GetPercentOfDelegators(),
+		Delegates:            delegates,
 	}
 
 	_ = json.NewEncoder(w).Encode(result)
