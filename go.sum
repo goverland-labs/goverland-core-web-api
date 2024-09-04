@@ -145,6 +145,8 @@ github.com/goverland-labs/goverland-core-feed/protocol v0.1.1 h1:MCglgp6jgTwg28J
 github.com/goverland-labs/goverland-core-feed/protocol v0.1.1/go.mod h1:fazb3ain351U8hH6XHC0/ThauiDvE6ehNWIyXtKjxg0=
 github.com/goverland-labs/goverland-core-storage/protocol v0.1.27-0.20240824064931-617f07106162 h1:8U/Kjq0pM+yCnt5pvy4K/EGhrWaWK6mQ061U/VFTqlo=
 github.com/goverland-labs/goverland-core-storage/protocol v0.1.27-0.20240824064931-617f07106162/go.mod h1:M3Y9rtmIgWZ0OtP38nJzAptfv9T4UdXPTHS2D25jWD8=
+github.com/goverland-labs/goverland-core-storage/protocol v0.1.27-0.20240903094914-a62adf81b0e7 h1:lOv0NnhQnPqDxjG5OMeVbgxd1WjGPgYTVmcYIMjRm9Y=
+github.com/goverland-labs/goverland-core-storage/protocol v0.1.27-0.20240903094914-a62adf81b0e7/go.mod h1:M3Y9rtmIgWZ0OtP38nJzAptfv9T4UdXPTHS2D25jWD8=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=

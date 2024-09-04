@@ -1,5 +1,9 @@
 package dao
 
+import (
+	"time"
+)
+
 type Delegate struct {
 	Address               string  `json:"address"`
 	ENSName               string  `json:"ens_name"`
@@ -21,6 +25,7 @@ type DelegateProfile struct {
 	PercentOfVotingPower float64               `json:"percent_of_voting_power"`
 	PercentOfDelegators  float64               `json:"percent_of_delegators"`
 	Delegates            []ProfileDelegateItem `json:"delegates"`
+	Expiration           *time.Time            `json:"expiration,omitempty"`
 }
 
 type ProfileDelegateItem struct {

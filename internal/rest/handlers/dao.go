@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -337,6 +338,12 @@ func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	var expiration *time.Time
+	if resp.GetExpiration() != nil {
+		exp := resp.GetExpiration().AsTime()
+		expiration = &exp
+	}
+
 	result := dao.DelegateProfile{
 		Address:              resp.GetAddress(),
 		VotingPower:          resp.GetVotingPower(),
@@ -345,6 +352,7 @@ func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 		PercentOfVotingPower: resp.GetPercentOfVotingPower(),
 		PercentOfDelegators:  resp.GetPercentOfDelegators(),
 		Delegates:            delegates,
+		Expiration:           expiration,
 	}
 
 	_ = json.NewEncoder(w).Encode(result)
