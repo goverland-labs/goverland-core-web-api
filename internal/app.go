@@ -78,7 +78,7 @@ func (a *Application) initServices() error {
 }
 
 func (a *Application) initRestAPI() error {
-	storageConn, err := grpc.Dial(a.cfg.InternalAPI.CoreStorageAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	storageConn, err := grpc.NewClient(a.cfg.InternalAPI.CoreStorageAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("create connection with core storage server: %v", err)
 	}
@@ -88,8 +88,9 @@ func (a *Application) initRestAPI() error {
 	vc := storagepb.NewVoteClient(storageConn)
 	ec := storagepb.NewEnsClient(storageConn)
 	sc := storagepb.NewStatsClient(storageConn)
+	delegateClient := storagepb.NewDelegateClient(storageConn)
 
-	feedConn, err := grpc.Dial(a.cfg.InternalAPI.CoreFeedAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	feedConn, err := grpc.NewClient(a.cfg.InternalAPI.CoreFeedAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("create connection with core feed server: %v", err)
 	}
@@ -99,7 +100,7 @@ func (a *Application) initRestAPI() error {
 	fc := feedpb.NewFeedClient(feedConn)
 
 	handlers := []apihandlers.APIHandler{
-		apihandlers.NewDaoHandler(dc, fc),
+		apihandlers.NewDaoHandler(dc, fc, delegateClient),
 		apihandlers.NewProposalHandler(pc, vc),
 		apihandlers.NewSubscribeHandler(subscriberClient, subscriptionClient),
 		apihandlers.NewFeedHandler(fc),

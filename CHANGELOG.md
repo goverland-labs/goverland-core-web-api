@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added proxy api for delegates
+
 ## [0.1.9] - 2024-08-13
 
 ### Changed

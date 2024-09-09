@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -16,14 +17,16 @@ import (
 )
 
 type DAO struct {
-	dc storagepb.DaoClient
-	fc feedpb.FeedClient
+	dc             storagepb.DaoClient
+	fc             feedpb.FeedClient
+	delegateClient storagepb.DelegateClient
 }
 
-func NewDaoHandler(dc storagepb.DaoClient, fc feedpb.FeedClient) APIHandler {
+func NewDaoHandler(dc storagepb.DaoClient, fc feedpb.FeedClient, delegateClient storagepb.DelegateClient) APIHandler {
 	return &DAO{
-		dc: dc,
-		fc: fc,
+		dc:             dc,
+		fc:             fc,
+		delegateClient: delegateClient,
 	}
 }
 
@@ -33,6 +36,8 @@ func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/daos/{id}/feed", h.getFeedByIDAction).Methods(http.MethodGet).Name("get_dao_feed_by_id")
 	baseRouter.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
 	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
+	baseRouter.HandleFunc("/daos/{id}/delegates", h.getDelegates).Methods(http.MethodGet).Name("get_delegates_list")
+	baseRouter.HandleFunc("/daos/{id}/delegate-profile", h.getDelegateProfile).Methods(http.MethodGet).Name("get_delegate_profile")
 }
 
 func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
@@ -242,6 +247,112 @@ func (h *DAO) getRecommendations(w http.ResponseWriter, r *http.Request) {
 			NetworkId:  info.GetNetworkId(),
 			Address:    info.GetAddress(),
 		})
+	}
+
+	_ = json.NewEncoder(w).Encode(result)
+}
+
+func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	daoID := vars["id"]
+
+	form, verr := forms.NewGetDelegatesForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetDelegates)
+
+	// TODO: for now we only support one address in query
+	var qAccounts []string
+	if params.Query != nil {
+		qAccounts = append(qAccounts, *params.Query)
+	}
+
+	resp, err := h.delegateClient.GetDelegates(r.Context(), &storagepb.GetDelegatesRequest{
+		DaoId:         daoID,
+		QueryAccounts: qAccounts,
+		Sort:          params.By,
+		Limit:         int32(params.Limit),
+		Offset:        int32(params.Offset),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao delegates")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	result := make([]dao.Delegate, 0, len(resp.Delegates))
+	for _, info := range resp.Delegates {
+		result = append(result, dao.Delegate{
+			Address:               info.GetAddress(),
+			ENSName:               info.GetEnsName(),
+			DelegatorCount:        info.GetDelegatorCount(),
+			PercentOfDelegators:   info.GetPercentOfDelegators(),
+			VotingPower:           info.GetVotingPower(),
+			PercentOfVotingPower:  info.GetPercentOfVotingPower(),
+			About:                 info.GetAbout(),
+			Statement:             info.GetStatement(),
+			VotesCount:            info.GetVotesCount(),
+			CreatedProposalsCount: info.GetCreatedProposalsCount(),
+		})
+	}
+
+	_ = json.NewEncoder(w).Encode(result)
+}
+
+func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	daoID := vars["id"]
+
+	form, verr := forms.NewGetDelegateProfileForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetDelegateProfile)
+
+	resp, err := h.delegateClient.GetDelegateProfile(r.Context(), &storagepb.GetDelegateProfileRequest{
+		DaoId:   daoID,
+		Address: params.Address,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get delegate profile")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	delegates := make([]dao.ProfileDelegateItem, 0, len(resp.Delegates))
+	for _, info := range resp.Delegates {
+		delegates = append(delegates, dao.ProfileDelegateItem{
+			Address:        info.GetAddress(),
+			ENSName:        info.GetEnsName(),
+			Weight:         info.GetWeight(),
+			DelegatedPower: info.GetDelegatedPower(),
+		})
+	}
+
+	var expiration *time.Time
+	if resp.GetExpiration() != nil {
+		exp := resp.GetExpiration().AsTime()
+		expiration = &exp
+	}
+
+	result := dao.DelegateProfile{
+		Address:              resp.GetAddress(),
+		VotingPower:          resp.GetVotingPower(),
+		IncomingPower:        resp.GetIncomingPower(),
+		OutgoingPower:        resp.GetOutgoingPower(),
+		PercentOfVotingPower: resp.GetPercentOfVotingPower(),
+		PercentOfDelegators:  resp.GetPercentOfDelegators(),
+		Delegates:            delegates,
+		Expiration:           expiration,
 	}
 
 	_ = json.NewEncoder(w).Encode(result)
