@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added github actions for building docker container
+
 ## [0.1.11] - 2024-09-09
 
 ### Fixed
