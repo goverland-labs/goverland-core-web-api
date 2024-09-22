@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+type DelegatesResponse struct {
+	Delegates []Delegate `json:"delegates"`
+	Total     int32      `json:"total"`
+}
+
 type Delegate struct {
 	Address               string  `json:"address"`
 	ENSName               string  `json:"ens_name"`

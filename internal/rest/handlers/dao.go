@@ -285,9 +285,9 @@ func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := make([]dao.Delegate, 0, len(resp.Delegates))
+	convertedDelegates := make([]dao.Delegate, 0, len(resp.Delegates))
 	for _, info := range resp.Delegates {
-		result = append(result, dao.Delegate{
+		convertedDelegates = append(convertedDelegates, dao.Delegate{
 			Address:               info.GetAddress(),
 			ENSName:               info.GetEnsName(),
 			DelegatorCount:        info.GetDelegatorCount(),
@@ -299,6 +299,11 @@ func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
 			VotesCount:            info.GetVotesCount(),
 			CreatedProposalsCount: info.GetCreatedProposalsCount(),
 		})
+	}
+
+	result := dao.DelegatesResponse{
+		Delegates: convertedDelegates,
+		Total:     resp.Total,
 	}
 
 	_ = json.NewEncoder(w).Encode(result)
