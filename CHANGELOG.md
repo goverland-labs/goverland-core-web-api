@@ -35,6 +35,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [0.1.10] - 2024-09-09
 
 ### Added
+- All delegations list by address
+
+### Added
 - Added proxy api for delegates
 
 ## [0.1.9] - 2024-08-13
