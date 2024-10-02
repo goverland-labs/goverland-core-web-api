@@ -12,10 +12,11 @@ import (
 type GetList struct {
 	helpers.Pagination
 
-	Dao       string
-	Category  string
-	Title     string
-	Proposals []string
+	Dao        string
+	Category   string
+	Title      string
+	Proposals  []string
+	OnlyActive bool
 }
 
 func NewGetListForm() *GetList {
@@ -28,6 +29,7 @@ func (f *GetList) ParseAndValidate(r *http.Request) (form.Former, response.Error
 	f.Dao = r.FormValue("dao")
 	f.Category = r.FormValue("category")
 	f.Title = r.FormValue("title")
+	f.OnlyActive = r.FormValue("only_active") == "true"
 	idsString := strings.TrimSpace(r.FormValue("proposals"))
 	if idsString != "" {
 		ids := strings.Split(idsString, ",")

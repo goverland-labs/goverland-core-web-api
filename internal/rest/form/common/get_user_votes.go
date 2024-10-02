@@ -13,6 +13,7 @@ type GetUserVotes struct {
 	Pagination
 
 	Proposals []string
+	DaoID     *string
 }
 
 func NewGetUserVotesForm() *GetUserVotes {
@@ -24,6 +25,7 @@ func (f *GetUserVotes) ParseAndValidate(r *http.Request) (form.Former, response.
 
 	f.ValidateAndSetPagination(r, errors)
 	f.validateAndSetProposalIds(r, errors)
+	f.validateAndSetDaoID(r)
 
 	if len(errors) > 0 {
 		ve := response.NewValidationError(errors)
@@ -60,4 +62,13 @@ func (f *GetUserVotes) ConvertToMap() map[string]interface{} {
 		"offset": f.Offset,
 		"limit":  f.Limit,
 	}
+}
+
+func (f *GetUserVotes) validateAndSetDaoID(r *http.Request) {
+	daoID := strings.TrimSpace(r.FormValue("dao_id"))
+	if daoID == "" {
+		return
+	}
+
+	f.DaoID = &daoID
 }
