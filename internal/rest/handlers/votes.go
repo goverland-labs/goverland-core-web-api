@@ -46,6 +46,7 @@ func (h *Votes) getUserVotesAction(w http.ResponseWriter, r *http.Request) {
 		Voter:       &address,
 		Limit:       &params.Limit,
 		Offset:      &params.Offset,
+		DaoId:       params.DaoID,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get user votes")
