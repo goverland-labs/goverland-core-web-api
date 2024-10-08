@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.15] - 2024-10-08
+
 ### Added
 - Extend DAO object with active proposals ids
 
