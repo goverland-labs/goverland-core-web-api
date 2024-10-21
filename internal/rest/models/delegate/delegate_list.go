@@ -30,3 +30,17 @@ type AllDelegations struct {
 	// List of delegations grouped by dao and sorted by popularity index
 	Delegations []DelegationSummary `json:"delegations,omitempty"`
 }
+
+type AllDelegators struct {
+	// The number of total delegators in out DB
+	TotalDelegatorsCount int `json:"total_delegators_count"`
+	// List of delegators grouped by dao and sorted by popularity index
+	Delegations []DelegationSummary `json:"delegations,omitempty"`
+}
+
+type TotalDelegations struct {
+	// The number of total delegators in out DB
+	TotalDelegatorsCount int `json:"total_delegators_count"`
+	// The number of total delegations in out DB
+	TotalDelegationsCount int `json:"total_delegations_count"`
+}
