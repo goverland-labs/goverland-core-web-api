@@ -72,7 +72,7 @@ func (h *Delegate) getTotalDelegations(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Fields(map[string]interface{}{
 			"address": address,
-		}).Msg("get delegators by address")
+		}).Msg("get GetDelegatesSummary by address")
 
 		response.HandleError(response.ResolveError(err), w)
 
