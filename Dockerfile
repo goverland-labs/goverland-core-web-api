@@ -27,7 +27,7 @@ COPY . .
 RUN go build -o bin/application .
 
 # Prepare executor image
-FROM alpine:3.18 AS production
+FROM alpine:3.20 AS production
 
 RUN apk update && \
     apk add ca-certificates libc6-compat && \
