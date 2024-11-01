@@ -5,11 +5,14 @@ import (
 	"net/http"
 	"time"
 
+	"go.openly.dev/pointy"
+
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/goverland-core-web-api/internal/response"
+	"github.com/goverland-labs/goverland-core-web-api/internal/rest/form/common"
 	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/delegate"
 )
 
@@ -24,15 +27,18 @@ func NewDelegateHandler(dc storagepb.DelegateClient) APIHandler {
 }
 
 func (h *Delegate) EnrichRoutes(baseRouter *mux.Router) {
-	baseRouter.HandleFunc("/delegates", h.getDelegatesByAddress).Methods(http.MethodGet).Name("get_delegates_by_address")
-	baseRouter.HandleFunc("/delegators", h.getDelegatorsByAddress).Methods(http.MethodGet).Name("get_delegators_by_address")
-	baseRouter.HandleFunc("/delegations/total", h.getTotalDelegations).Methods(http.MethodGet).Name("get_delegates_summary_by_address")
+	baseRouter.HandleFunc("/user/{address}/delegates/top", h.getDelegatesByAddress).Methods(http.MethodGet).Name("get_delegates_by_address")
+	baseRouter.HandleFunc("/user/{address}/delegators/top", h.getDelegatorsByAddress).Methods(http.MethodGet).Name("get_delegators_by_address")
+	baseRouter.HandleFunc("/user/{address}/delegations/total", h.getTotalDelegations).Methods(http.MethodGet).Name("get_delegates_summary_by_address")
+	baseRouter.HandleFunc("/user/{address}/delegates/{dao_id}/list", h.getDelegatesList).Methods(http.MethodGet).Name("get_delegates_list")
+	baseRouter.HandleFunc("/user/{address}/delegators/{dao_id}/list", h.getDelegatorsList).Methods(http.MethodGet).Name("get_delegators_list")
 }
 
 func (h *Delegate) getDelegatesByAddress(w http.ResponseWriter, r *http.Request) {
-	address := r.FormValue("address")
+	vars := mux.Vars(r)
+	address := vars["address"]
 
-	resp, err := h.dc.GetAllDelegations(r.Context(), &storagepb.GetAllDelegationsRequest{Address: address})
+	resp, err := h.dc.GetTopDelegates(r.Context(), &storagepb.GetTopDelegatesRequest{Address: address})
 	if err != nil {
 		log.Error().Err(err).Fields(map[string]interface{}{
 			"address": address,
@@ -44,13 +50,13 @@ func (h *Delegate) getDelegatesByAddress(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(convertToDelegatesFromProto(resp))
+	_ = json.NewEncoder(w).Encode(convertToTopDelegatesFromProto(resp))
 }
 
 func (h *Delegate) getDelegatorsByAddress(w http.ResponseWriter, r *http.Request) {
 	address := r.FormValue("address")
 
-	resp, err := h.dc.GetAllDelegators(r.Context(), &storagepb.GetAllDelegatorsRequest{Address: address})
+	resp, err := h.dc.GetTopDelegators(r.Context(), &storagepb.GetTopDelegatorsRequest{Address: address})
 	if err != nil {
 		log.Error().Err(err).Fields(map[string]interface{}{
 			"address": address,
@@ -62,13 +68,13 @@ func (h *Delegate) getDelegatorsByAddress(w http.ResponseWriter, r *http.Request
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(convertToDelegatorsFromProto(resp))
+	_ = json.NewEncoder(w).Encode(convertToTopDelegatorsFromProto(resp))
 }
 
 func (h *Delegate) getTotalDelegations(w http.ResponseWriter, r *http.Request) {
 	address := r.FormValue("address")
 
-	resp, err := h.dc.GetDelegatesSummary(r.Context(), &storagepb.GetDelegatesSummaryRequest{Address: address})
+	resp, err := h.dc.GetDelegationSummary(r.Context(), &storagepb.GetDelegationSummaryRequest{Address: address})
 	if err != nil {
 		log.Error().Err(err).Fields(map[string]interface{}{
 			"address": address,
@@ -81,71 +87,156 @@ func (h *Delegate) getTotalDelegations(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(delegate.TotalDelegations{
-		TotalDelegatorsCount:  int(resp.GetTotalDelegatorsCount()),
-		TotalDelegationsCount: int(resp.GetTotalDelegationsCount()),
+		TotalDelegatorsCount: int(resp.GetTotalDelegatorsCount()),
+		TotalDelegatesCount:  int(resp.GetTotalDelegatesCount()),
 	})
 }
 
-func convertToDelegatesFromProto(info *storagepb.GetAllDelegationsResponse) delegate.AllDelegations {
-	all := delegate.AllDelegations{
-		TotalDelegationsCount: int(info.GetTotalDelegationsCount()),
-		Delegations:           make([]delegate.DelegationSummary, 0, len(info.GetDelegations())),
+func convertToTopDelegatesFromProto(info *storagepb.GetTopDelegatesResponse) delegate.TopDelegates {
+	all := delegate.TopDelegates{
+		TotalCount: int(info.GetTotalDelegatesCount()),
+		List:       make([]delegate.DelegationSummary, 0, len(info.GetList())),
 	}
 
-	for _, delegation := range info.GetDelegations() {
-		daoDelegations := make([]delegate.DelegationDetails, 0, len(delegation.Delegations))
-		for _, dd := range delegation.Delegations {
-			var exp *time.Time
-			if dd.GetExpiration() != nil {
-				expTime := dd.GetExpiration().AsTime()
-				exp = &expTime
-			}
-
-			daoDelegations = append(daoDelegations, delegate.DelegationDetails{
-				Address:             dd.GetAddress(),
-				EnsName:             dd.GetEnsName(),
-				PercentOfDelegators: int(dd.GetPercentOfDelegators()),
-				Expiration:          exp,
-			})
+	for _, delegation := range info.GetList() {
+		daoDelegations := make([]delegate.DelegationDetails, 0, len(delegation.GetList()))
+		for _, dd := range delegation.GetList() {
+			daoDelegations = append(daoDelegations, convertDelegationToModel(dd))
 		}
 
-		all.Delegations = append(all.Delegations, delegate.DelegationSummary{
-			Dao:         convertToDaoFromProto(delegation.Dao),
-			Delegations: daoDelegations,
+		all.List = append(all.List, delegate.DelegationSummary{
+			Dao:        convertToDaoFromProto(delegation.Dao),
+			List:       daoDelegations,
+			TotalCount: int(delegation.TotalCount),
 		})
 	}
 
 	return all
 }
 
-func convertToDelegatorsFromProto(info *storagepb.GetAllDelegatorsResponse) delegate.AllDelegators {
-	all := delegate.AllDelegators{
-		TotalDelegatorsCount: int(info.GetTotalDelegatorsCount()),
-		Delegations:          make([]delegate.DelegationSummary, 0, len(info.GetDelegators())),
+func convertToTopDelegatorsFromProto(info *storagepb.GetTopDelegatorsResponse) delegate.TopDelegators {
+	all := delegate.TopDelegators{
+		TotalCount: int(info.GetTotalDelegatorsCount()),
+		List:       make([]delegate.DelegationSummary, 0, len(info.GetList())),
 	}
 
-	for _, di := range info.GetDelegators() {
-		daoDelegations := make([]delegate.DelegationDetails, 0, len(di.GetDelegators()))
-		for _, dd := range di.GetDelegators() {
-			var exp *time.Time
-			if dd.GetExpiration() != nil {
-				expTime := dd.GetExpiration().AsTime()
-				exp = &expTime
-			}
-
-			daoDelegations = append(daoDelegations, delegate.DelegationDetails{
-				Address:             dd.GetAddress(),
-				EnsName:             dd.GetEnsName(),
-				PercentOfDelegators: int(dd.GetPercentOfDelegators()),
-				Expiration:          exp,
-			})
+	for _, di := range info.GetList() {
+		daoDelegations := make([]delegate.DelegationDetails, 0, len(di.GetList()))
+		for _, dd := range di.GetList() {
+			daoDelegations = append(daoDelegations, convertDelegationToModel(dd))
 		}
 
-		all.Delegations = append(all.Delegations, delegate.DelegationSummary{
-			Dao:         convertToDaoFromProto(di.Dao),
-			Delegations: daoDelegations,
+		all.List = append(all.List, delegate.DelegationSummary{
+			Dao:        convertToDaoFromProto(di.Dao),
+			List:       daoDelegations,
+			TotalCount: int(di.TotalCount),
 		})
 	}
 
 	return all
+}
+
+func (h *Delegate) getDelegatesList(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	address := vars["address"]
+	daoID := vars["dao_id"]
+
+	form, verr := common.NewPagination().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	params := form.(*common.Pagination)
+	resp, err := h.dc.GetDelegatesByDao(r.Context(), &storagepb.GetDelegatesByDaoRequest{
+		DaoId:   daoID,
+		Address: address,
+		Limit:   uint32(params.Limit),
+		Offset:  pointy.Uint32(uint32(params.Offset)),
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(map[string]interface{}{
+			"address": address,
+		}).Msg("get delegates by address")
+
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(convertToDelegatesListFromProto(resp))
+}
+
+func convertToDelegatesListFromProto(info *storagepb.GetDelegatesByDaoResponse) delegate.DelegatesList {
+	all := delegate.DelegatesList{
+		List:       make([]delegate.DelegationDetails, 0, len(info.GetList())),
+		TotalCount: int(info.GetTotalCount()),
+	}
+
+	for _, di := range info.GetList() {
+		all.List = append(all.List, convertDelegationToModel(di))
+	}
+
+	return all
+}
+
+func convertToDelegatorsListFromProto(info *storagepb.GetDelegatorsByDaoResponse) delegate.DelegatorsList {
+	all := delegate.DelegatorsList{
+		List:       make([]delegate.DelegationDetails, 0, len(info.GetList())),
+		TotalCount: int(info.GetTotalCount()),
+	}
+
+	for _, di := range info.GetList() {
+		all.List = append(all.List, convertDelegationToModel(di))
+	}
+
+	return all
+}
+
+func convertDelegationToModel(info *storagepb.DelegationDetails) delegate.DelegationDetails {
+	var exp *time.Time
+	if info.GetExpiration() != nil {
+		expTime := info.GetExpiration().AsTime()
+		exp = &expTime
+	}
+
+	return delegate.DelegationDetails{
+		Address:             info.GetAddress(),
+		EnsName:             info.GetEnsName(),
+		PercentOfDelegators: int(info.GetPercentOfDelegators()),
+		Expiration:          exp,
+	}
+}
+
+func (h *Delegate) getDelegatorsList(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	address := vars["address"]
+	daoID := vars["dao_id"]
+
+	form, verr := common.NewPagination().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	params := form.(*common.Pagination)
+	resp, err := h.dc.GetDelegatorsByDao(r.Context(), &storagepb.GetDelegatorsByDaoRequest{
+		DaoId:   daoID,
+		Address: address,
+		Limit:   uint32(params.Limit),
+		Offset:  pointy.Uint32(uint32(params.Offset)),
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(map[string]interface{}{
+			"address": address,
+		}).Msg("get delegates by address")
+
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(convertToDelegatorsListFromProto(resp))
 }

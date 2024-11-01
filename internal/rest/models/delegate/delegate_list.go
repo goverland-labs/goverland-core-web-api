@@ -21,26 +21,42 @@ type DelegationSummary struct {
 	// Dao details
 	Dao dao.Dao `json:"dao"`
 	// List of delegations
-	Delegations []DelegationDetails `json:"delegations,omitempty"`
+	List []DelegationDetails `json:"list,omitempty"`
+	// The number of delegations for DAO
+	TotalCount int `json:"total_count"`
 }
 
-type AllDelegations struct {
+type TopDelegates struct {
 	// The number of total delegations in out DB
-	TotalDelegationsCount int `json:"total_delegations_count"`
+	TotalCount int `json:"total_count"`
 	// List of delegations grouped by dao and sorted by popularity index
-	Delegations []DelegationSummary `json:"delegations,omitempty"`
+	List []DelegationSummary `json:"list,omitempty"`
 }
 
-type AllDelegators struct {
+type TopDelegators struct {
 	// The number of total delegators in out DB
-	TotalDelegatorsCount int `json:"total_delegators_count"`
+	TotalCount int `json:"total_count"`
 	// List of delegators grouped by dao and sorted by popularity index
-	Delegations []DelegationSummary `json:"delegations,omitempty"`
+	List []DelegationSummary `json:"list,omitempty"`
 }
 
 type TotalDelegations struct {
 	// The number of total delegators in out DB
 	TotalDelegatorsCount int `json:"total_delegators_count"`
-	// The number of total delegations in out DB
-	TotalDelegationsCount int `json:"total_delegations_count"`
+	// The number of total delegates in out DB
+	TotalDelegatesCount int `json:"total_delegates_count"`
+}
+
+type DelegatesList struct {
+	// List of delegations
+	List []DelegationDetails `json:"list,omitempty"`
+	// The number of delegations for DAO
+	TotalCount int `json:"total_count"`
+}
+
+type DelegatorsList struct {
+	// List of delegations
+	List []DelegationDetails `json:"list,omitempty"`
+	// The number of delegations for DAO
+	TotalCount int `json:"total_count"`
 }

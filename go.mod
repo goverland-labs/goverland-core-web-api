@@ -11,11 +11,12 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/goverland-core-feed/protocol v0.1.1
-	github.com/goverland-labs/goverland-core-storage/protocol v0.3.1-0.20241018152538-cfbd11a72873
+	github.com/goverland-labs/goverland-core-storage/protocol v0.3.3-0.20241101161427-c2f0ec49091f
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.0
 	github.com/s-larionov/process-manager v0.0.1
 	github.com/shopspring/decimal v1.3.1
+	go.openly.dev/pointy v1.3.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142
 	google.golang.org/grpc v1.67.0
 )

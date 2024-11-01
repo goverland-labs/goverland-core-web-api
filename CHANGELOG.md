@@ -8,8 +8,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
-- Implement getting delegations by address from storage
-- Implement getting delegators by address from storage
+- Implement getting top delegates/delegators by address from storage
+- Implement getting delegates/delegators list by params
 - Implement getting count of delegations by address from storage
 
 ## [0.1.15] - 2024-10-08
