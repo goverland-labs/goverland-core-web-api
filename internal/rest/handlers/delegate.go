@@ -54,7 +54,8 @@ func (h *Delegate) getDelegatesByAddress(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Delegate) getDelegatorsByAddress(w http.ResponseWriter, r *http.Request) {
-	address := r.FormValue("address")
+	vars := mux.Vars(r)
+	address := vars["address"]
 
 	resp, err := h.dc.GetTopDelegators(r.Context(), &storagepb.GetTopDelegatorsRequest{Address: address})
 	if err != nil {
@@ -72,7 +73,8 @@ func (h *Delegate) getDelegatorsByAddress(w http.ResponseWriter, r *http.Request
 }
 
 func (h *Delegate) getTotalDelegations(w http.ResponseWriter, r *http.Request) {
-	address := r.FormValue("address")
+	vars := mux.Vars(r)
+	address := vars["address"]
 
 	resp, err := h.dc.GetDelegationSummary(r.Context(), &storagepb.GetDelegationSummaryRequest{Address: address})
 	if err != nil {
@@ -198,7 +200,11 @@ func convertDelegationToModel(info *storagepb.DelegationDetails) delegate.Delega
 	var exp *time.Time
 	if info.GetExpiration() != nil {
 		expTime := info.GetExpiration().AsTime()
-		exp = &expTime
+
+		// small fix for getting correct expirations
+		if expTime.Before(time.Date(2100, 1, 1, 0, 0, 0, 0, time.Local)) {
+			exp = &expTime
+		}
 	}
 
 	return delegate.DelegationDetails{
