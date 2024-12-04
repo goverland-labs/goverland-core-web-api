@@ -7,6 +7,7 @@ import (
 
 	"github.com/goverland-labs/goverland-core-web-api/internal/response"
 	"github.com/goverland-labs/goverland-core-web-api/internal/response/errs"
+	"github.com/goverland-labs/goverland-core-web-api/internal/rest/form"
 )
 
 const (
@@ -17,6 +18,24 @@ const (
 type Pagination struct {
 	Offset uint64
 	Limit  uint64
+}
+
+func NewPagination() *Pagination {
+	return &Pagination{}
+}
+
+func (p *Pagination) ParseAndValidate(r *http.Request) (form.Former, response.Error) {
+	errors := make(map[string]response.ErrorMessage)
+
+	p.ValidateAndSetPagination(r, errors)
+
+	if len(errors) > 0 {
+		ve := response.NewValidationError(errors)
+
+		return nil, ve
+	}
+
+	return p, nil
 }
 
 func (p *Pagination) ValidateAndSetPagination(r *http.Request, errors map[string]response.ErrorMessage) {
@@ -138,4 +157,11 @@ func (p *Pagination) minUint64(a, b uint64) uint64 {
 	}
 
 	return b
+}
+
+func (p *Pagination) ConvertToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"limit":  p.Limit,
+		"offset": p.Offset,
+	}
 }

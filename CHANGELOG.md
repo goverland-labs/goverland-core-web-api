@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Implement getting top delegates/delegators by address from storage
+- Implement getting delegates/delegators list by params
+- Implement getting count of delegations by address from storage
+
 ## [0.1.15] - 2024-10-08
 
 ### Added
@@ -33,6 +38,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Update core storage protocol
 
 ## [0.1.10] - 2024-09-09
+
+### Added
+- All delegations list by address
 
 ### Added
 - Added proxy api for delegates
