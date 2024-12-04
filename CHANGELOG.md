@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2024-12-04
+
 ### Added
 - Implement getting top delegates/delegators by address from storage
 - Implement getting delegates/delegators list by params
