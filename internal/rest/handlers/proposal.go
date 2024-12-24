@@ -195,6 +195,10 @@ func (h *Proposal) validateVote(w http.ResponseWriter, r *http.Request) {
 		OK:                  validateResponse.GetOk(),
 		VotingPower:         validateResponse.GetVotingPower(),
 		VoteValidationError: voteValidationError,
+		VoteStatus: proposal.VoteStatus{
+			Voted:  validateResponse.GetVoteStatus().GetVoted(),
+			Choice: validateResponse.GetVoteStatus().GetChoice().GetValue(),
+		},
 	}
 
 	_ = json.NewEncoder(w).Encode(voteValidation)

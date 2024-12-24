@@ -26,6 +26,12 @@ type VoteValidation struct {
 	OK                  bool                 `json:"ok"`
 	VotingPower         float64              `json:"voting_power"`
 	VoteValidationError *VoteValidationError `json:"error,omitempty"`
+	VoteStatus          VoteStatus           `json:"status"`
+}
+
+type VoteStatus struct {
+	Voted  bool            `json:"voted"`
+	Choice json.RawMessage `json:"choice,omitempty"`
 }
 
 type VoteValidationError struct {
