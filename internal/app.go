@@ -13,9 +13,15 @@ import (
 
 	"google.golang.org/grpc"
 
+	infeedpb "github.com/goverland-labs/goverland-core-web-api/protocol/feed"
+
+	instopb "github.com/goverland-labs/goverland-core-web-api/protocol/storage"
+
 	"github.com/goverland-labs/goverland-core-web-api/internal/config"
+	ingrpc "github.com/goverland-labs/goverland-core-web-api/internal/grpc"
 	"github.com/goverland-labs/goverland-core-web-api/internal/rest"
 	apihandlers "github.com/goverland-labs/goverland-core-web-api/internal/rest/handlers"
+	"github.com/goverland-labs/goverland-core-web-api/pkg/grpcsrv"
 	"github.com/goverland-labs/goverland-core-web-api/pkg/health"
 	"github.com/goverland-labs/goverland-core-web-api/pkg/prometheus"
 )
@@ -24,6 +30,11 @@ type Application struct {
 	sigChan <-chan os.Signal
 	manager *process.Manager
 	cfg     config.App
+
+	cdc  storagepb.DaoClient
+	cpc  storagepb.ProposalClient
+	cefc feedpb.FeedEventsClient
+	csfc storagepb.VoteClient
 }
 
 func NewApplication(cfg config.App) (*Application, error) {
@@ -57,6 +68,8 @@ func (a *Application) bootstrap() error {
 		// Init Workers: Application
 		a.initRestAPI,
 
+		a.initGRPCServer,
+
 		// Init Workers: System
 		a.initPrometheusWorker,
 		a.initHealthWorker,
@@ -83,8 +96,9 @@ func (a *Application) initRestAPI() error {
 		return fmt.Errorf("create connection with core storage server: %v", err)
 	}
 
-	dc := storagepb.NewDaoClient(storageConn)
-	pc := storagepb.NewProposalClient(storageConn)
+	a.cdc = storagepb.NewDaoClient(storageConn)
+	a.cpc = storagepb.NewProposalClient(storageConn)
+	a.csfc = storagepb.NewVoteClient(storageConn)
 	vc := storagepb.NewVoteClient(storageConn)
 	ec := storagepb.NewEnsClient(storageConn)
 	sc := storagepb.NewStatsClient(storageConn)
@@ -98,10 +112,11 @@ func (a *Application) initRestAPI() error {
 	subscriberClient := feedpb.NewSubscriberClient(feedConn)
 	subscriptionClient := feedpb.NewSubscriptionClient(feedConn)
 	fc := feedpb.NewFeedClient(feedConn)
+	a.cefc = feedpb.NewFeedEventsClient(feedConn)
 
 	handlers := []apihandlers.APIHandler{
-		apihandlers.NewDaoHandler(dc, fc, delegateClient),
-		apihandlers.NewProposalHandler(pc, vc),
+		apihandlers.NewDaoHandler(a.cdc, fc, delegateClient),
+		apihandlers.NewProposalHandler(a.cpc, vc),
 		apihandlers.NewSubscribeHandler(subscriberClient, subscriptionClient),
 		apihandlers.NewFeedHandler(fc),
 		apihandlers.NewVotesHandler(vc),
@@ -137,4 +152,22 @@ func (a *Application) registerShutdown() {
 	}(a.manager)
 
 	a.manager.AwaitAll()
+}
+
+func (a *Application) initGRPCServer() error {
+	authInterceptor := grpcsrv.NewAuthInterceptor()
+	srv := grpcsrv.NewGrpcServer(
+		[]string{
+			"/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo",
+		},
+		authInterceptor.AuthAndIdentifyTickerFunc,
+	)
+
+	instopb.RegisterDaoServer(srv, ingrpc.NewDaoServer(a.cdc))
+	instopb.RegisterProposalServer(srv, ingrpc.NewProposalServer(a.cpc))
+	infeedpb.RegisterFeedEventsServer(srv, ingrpc.NewFeedServer(ingrpc.NewService(a.cefc, a.csfc)))
+
+	a.manager.AddWorker(grpcsrv.NewGrpcServerWorker("API", srv, a.cfg.InternalAPI.Bind))
+
+	return nil
 }
