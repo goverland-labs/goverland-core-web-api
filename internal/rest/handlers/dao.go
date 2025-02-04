@@ -38,6 +38,8 @@ func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
 	baseRouter.HandleFunc("/daos/{id}/delegates", h.getDelegates).Methods(http.MethodGet).Name("get_delegates_list")
 	baseRouter.HandleFunc("/daos/{id}/delegate-profile", h.getDelegateProfile).Methods(http.MethodGet).Name("get_delegate_profile")
+	baseRouter.HandleFunc("/daos/{id}/token-info", h.getTokenInfo).Methods(http.MethodGet).Name("get_dao_token_info")
+	baseRouter.HandleFunc("/daos/{id}/token-chart", h.getTokenChart).Methods(http.MethodGet).Name("get_dao_token_chart")
 }
 
 func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
@@ -363,6 +365,66 @@ func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(result)
 }
 
+func (h *DAO) getTokenInfo(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	resp, err := h.dc.GetTokenInfo(r.Context(), &storagepb.TokenInfoRequest{DaoId: id})
+	if err != nil {
+		log.Error().Err(err).Fields(map[string]interface{}{
+			"id": id,
+		}).Msg("get token info by dao id")
+		response.HandleError(response.ResolveError(err), w)
+		return
+	}
+
+	ti := dao.TokenInfo{
+		Name:                  resp.GetName(),
+		Symbol:                resp.GetSymbol(),
+		TotalSupply:           resp.GetTotalSupply(),
+		CirculatingSupply:     resp.GetCirculatingSupply(),
+		MarketCap:             resp.GetMarketCap(),
+		FullyDilutedValuation: resp.GetFullyDilutedValuation(),
+		Price:                 resp.GetPrice(),
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(ti)
+}
+
+func (h *DAO) getTokenChart(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	period := r.FormValue("period")
+
+	resp, err := h.dc.GetTokenChart(r.Context(), &storagepb.TokenChartRequest{DaoId: id, Period: period})
+	if err != nil {
+		log.Error().Err(err).Fields(map[string]interface{}{
+			"id":     id,
+			"period": period,
+		}).Msg("get token chart by dao id")
+		response.HandleError(response.ResolveError(err), w)
+		return
+	}
+
+	convertedPoints := make([]dao.Point, 0, len(resp.Points))
+	for _, info := range resp.Points {
+		convertedPoints = append(convertedPoints, dao.Point{
+			Time:  info.GetTime().AsTime(),
+			Price: info.GetPrice(),
+		})
+	}
+
+	tc := dao.TokenChart{
+		Price:        resp.GetPrice(),
+		PriceChanges: resp.GetPriceChanges(),
+		Points:       convertedPoints,
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(tc)
+}
+
 func convertToDaoFromProto(info *storagepb.DaoInfo) dao.Dao {
 	id, _ := uuid.Parse(info.GetId())
 
@@ -401,6 +463,7 @@ func convertToDaoFromProto(info *storagepb.DaoInfo) dao.Dao {
 		ActiveProposalsIDs: info.GetActiveProposalsIds(),
 		Verified:           info.Verified,
 		PopularityIndex:    info.GetPopularityIndex(),
+		TokenExist:         info.GetTokenExist(),
 	}
 }
 
