@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/goverland-core-feed/protocol v0.1.1
-	github.com/goverland-labs/goverland-core-storage/protocol v0.4.1-0.20241219055229-dd1464b9178c
+	github.com/goverland-labs/goverland-core-storage/protocol v0.4.4
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.0
 	github.com/s-larionov/process-manager v0.0.1

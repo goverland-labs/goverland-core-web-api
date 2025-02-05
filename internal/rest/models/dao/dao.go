@@ -70,4 +70,5 @@ type Dao struct {
 	ActiveProposalsIDs []string   `json:"active_proposals_ids"`
 	Verified           bool       `json:"verified"`
 	PopularityIndex    float64    `json:"popularity_index"`
+	TokenExist         bool       `json:"token_exist"`
 }
