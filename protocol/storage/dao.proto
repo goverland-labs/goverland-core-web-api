@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package storage;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = ".;storage";
+
+service Dao {
+  rpc GetByID(DaoByIDRequest) returns (DaoByIDResponse);
+}
+
+message DaoByIDRequest {
+  string dao_id = 1;
+}
+
+message DaoInfo {
+  string id = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+  string name = 4;
+  string avatar = 5;
+  string alias = 6;
+  bool verified = 7;
+  double popularity_index = 8;
+}
+
+message DaoByIDResponse {
+  DaoInfo dao = 1;
+}

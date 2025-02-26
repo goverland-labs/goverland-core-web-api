@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- gRPC feed protocol
+
 ## [0.2.2] - 2025-02-05
 
 ### Added
