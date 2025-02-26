@@ -145,20 +145,21 @@ func convertFeedProposal(in *feedproto.FeedItem_Proposal) *internalproto.FeedIte
 
 	return &internalproto.FeedItem_Proposal{
 		Proposal: &internalproto.Proposal{
-			CreatedAt:     in.Proposal.GetCreatedAt(),
-			UpdatedAt:     in.Proposal.GetUpdatedAt(),
-			Id:            in.Proposal.GetId(),
-			DaoInternalId: in.Proposal.GetDaoInternalId(),
-			Author:        in.Proposal.GetAuthor(),
-			Title:         in.Proposal.GetTitle(),
-			State:         in.Proposal.GetState(),
-			Spam:          in.Proposal.GetSpam(),
-			// todo: fill it from core feed part
-			//Created:       in.Proposal.GetCreated(),
-			//Type:          in.Proposal.GetType(),
-			//Privacy:       in.Proposal.GetPrivacy(),
-			//Choices: in.Proposal.GetChoices(),
-			Timeline: convertTimeline(in.Proposal.GetTimeline()),
+			CreatedAt:         in.Proposal.GetCreatedAt(),
+			UpdatedAt:         in.Proposal.GetUpdatedAt(),
+			Id:                in.Proposal.GetId(),
+			DaoInternalId:     in.Proposal.GetDaoInternalId(),
+			Author:            in.Proposal.GetAuthor(),
+			Title:             in.Proposal.GetTitle(),
+			State:             in.Proposal.GetState(),
+			Spam:              in.Proposal.GetSpam(),
+			Type:              in.Proposal.GetType(),
+			Privacy:           in.Proposal.GetPrivacy(),
+			Choices:           in.Proposal.GetChoices(),
+			OriginalCreatedAt: in.Proposal.GetCreatedAt(),
+			VotingStartedAt:   in.Proposal.GetVoteStart(),
+			VotingEndedAt:     in.Proposal.GetVoteEnd(),
+			Timeline:          convertTimeline(in.Proposal.GetTimeline()),
 		},
 	}
 }

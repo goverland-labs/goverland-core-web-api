@@ -2,9 +2,11 @@ package grpc
 
 import (
 	"context"
+	"time"
 
 	coredata "github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	internalpb "github.com/goverland-labs/goverland-core-web-api/protocol/storage"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ProposalServer struct {
@@ -51,15 +53,17 @@ func convertProposal(pr *coredata.ProposalInfo) *internalpb.ProposalInfo {
 		UpdatedAt: pr.GetUpdatedAt(),
 		Author:    pr.GetAuthor(),
 		DaoId:     pr.GetDaoId(),
-		Created:   pr.GetCreated(),
 		Title:     pr.GetTitle(),
 		State:     pr.GetState(),
 		Type:      pr.GetType(),
 		Privacy:   pr.GetPrivacy(),
+		Timeline:  timeline,
 		// todo: add sending spam flag to core-storage pb
 		//Spam:      pr.GetProposal().GetSpam(),
-		Choices:  pr.GetChoices(),
-		Timeline: timeline,
+		Choices:           pr.GetChoices(),
+		OriginalCreatedAt: timestamppb.New(time.Unix(int64(pr.GetCreated()), 0)),
+		VotingStartedAt:   timestamppb.New(time.Unix(int64(pr.GetStart()), 0)),
+		VotingEndedAt:     timestamppb.New(time.Unix(int64(pr.GetEnd()), 0)),
 	}
 }
 

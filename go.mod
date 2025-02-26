@@ -12,9 +12,9 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
-	github.com/goverland-labs/goverland-core-feed/protocol v0.1.2-0.20250117145742-cf29516364e7
+	github.com/goverland-labs/goverland-core-feed/protocol v0.1.2-0.20250226131005-a73cb423fb64
 	github.com/goverland-labs/goverland-core-storage/protocol v0.4.4
-	github.com/goverland-labs/goverland-core-web-api/protocol v0.0.0-20250220123311-aafecc5e5171
+	github.com/goverland-labs/goverland-core-web-api/protocol v0.0.0-20250220134513-ce50ab1484b8
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/prometheus/client_golang v1.14.0

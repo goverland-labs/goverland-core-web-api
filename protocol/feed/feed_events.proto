@@ -55,9 +55,11 @@ message Proposal {
   string type = 8;
   string privacy = 9;
   bool spam = 10;
-  uint64 created = 11;
   repeated Timeline timeline = 12;
   repeated string choices = 13;
+  google.protobuf.Timestamp original_created_at = 14;
+  google.protobuf.Timestamp voting_started_at = 15;
+  google.protobuf.Timestamp voting_ended_at = 16;
 }
 
 message Delegate {

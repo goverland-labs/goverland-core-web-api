@@ -21,7 +21,6 @@ message ProposalInfo {
   google.protobuf.Timestamp updated_at = 3;
   string author = 4;
   string dao_id = 5;
-  uint64 created = 6;
   string title = 7;
   string state = 8;
   string type = 9;
@@ -29,6 +28,9 @@ message ProposalInfo {
   bool spam = 11;
   repeated Timeline timeline = 12;
   repeated string choices = 13;
+  google.protobuf.Timestamp original_created_at = 14;
+  google.protobuf.Timestamp voting_started_at = 15;
+  google.protobuf.Timestamp voting_ended_at = 16;
 }
 
 message Timeline {
