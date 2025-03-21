@@ -114,6 +114,10 @@ func (s *Service) GetFeedItems(ctx context.Context, req ItemsRequest) <-chan Res
 func convertTypesToFeedProto(list []internalproto.FeedItemType) []feedproto.FeedItemType {
 	res := make([]feedproto.FeedItemType, 0, len(list))
 	for _, item := range list {
+		if item == internalproto.FeedItemType_FEED_ITEM_TYPE_VOTE {
+			continue
+		}
+
 		res = append(res, feedproto.FeedItemType(item))
 	}
 
