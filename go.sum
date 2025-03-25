@@ -150,10 +150,10 @@ github.com/gorilla/handlers v1.5.1 h1:9lRY6j8DEeeBT10CvO9hGW0gmky0BprnvDI5vfhUHH
 github.com/gorilla/handlers v1.5.1/go.mod h1:t8XrUpc4KVXb7HGyJ4/cEnwQiaxrX/hz1Zv/4g96P1Q=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
-github.com/goverland-labs/goverland-core-feed/protocol v0.2.1-0.20250318140125-dfa68a2dd1fd h1:ES8shjAdiHm6B+26ZZEprbcrWHP0y5P80Soy2Z1E6dw=
-github.com/goverland-labs/goverland-core-feed/protocol v0.2.1-0.20250318140125-dfa68a2dd1fd/go.mod h1:WPMgKlDpWHRH20A63NO9GtiznPgdNsD78wCOH7Pl+ow=
-github.com/goverland-labs/goverland-core-storage/protocol v0.4.5-0.20250314130026-0a4074a47c97 h1:wB5mn+Zc0EDAFj0BvmqDZMe/MVW3m9eALsJFPQTgUbE=
-github.com/goverland-labs/goverland-core-storage/protocol v0.4.5-0.20250314130026-0a4074a47c97/go.mod h1:GGKNmeR9GAoY//i7/kZaBVQHb8v7S8TmnLhhT77wETY=
+github.com/goverland-labs/goverland-core-feed/protocol v0.2.1 h1:b1ANeU8Znyh0BctPq7Xi+VinWZ2wGVrhgpZwe3dJuYs=
+github.com/goverland-labs/goverland-core-feed/protocol v0.2.1/go.mod h1:WPMgKlDpWHRH20A63NO9GtiznPgdNsD78wCOH7Pl+ow=
+github.com/goverland-labs/goverland-core-storage/protocol v0.4.8 h1:zWurybvqiGlwk6MSBKMJPcmeCGKRV0lPnaf4RK3PCR0=
+github.com/goverland-labs/goverland-core-storage/protocol v0.4.8/go.mod h1:GGKNmeR9GAoY//i7/kZaBVQHb8v7S8TmnLhhT77wETY=
 github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 h1:UH//fgunKIs4JdUbpDl1VZCDaL56wXCB/5+wF6uHfaI=
 github.com/grpc-ecosystem/go-grpc-middleware v1.4.0/go.mod h1:g5qyo/la0ALbONm6Vbp88Yd8NsDy6rZz+RcrMPxvld8=
 github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 h1:Ovs26xHkKqVztRpIrF/92BcuyuQ/YW4NSIpoGtfXNho=
