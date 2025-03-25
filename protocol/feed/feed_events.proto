@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package feed;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = ".;feed";
+
+service FeedEvents {
+  rpc EventsSubscribe(EventsSubscribeRequest) returns (stream FeedItem);
+}
+
+message EventsSubscribeRequest {
+  // subscriber_id represent inbox global identifier
+  string subscriber_id = 1;
+  // subscription_types describe on which types client would like to subscribe
+  repeated FeedItemType subscription_types = 2;
+  // если его нет, то берем сейчас?
+  optional google.protobuf.Timestamp last_updated_at = 3;
+}
+
+enum FeedItemType {
+  FEED_ITEM_TYPE_UNSPECIFIED = 0;
+  FEED_ITEM_TYPE_DAO = 1;
+  FEED_ITEM_TYPE_PROPOSAL = 2;
+  FEED_ITEM_TYPE_DELEGATE = 3;
+  FEED_ITEM_TYPE_VOTE = 4;
+}
+
+message Timeline {
+  string action = 1;
+  google.protobuf.Timestamp created_at = 2;
+}
+
+message DAO {
+  google.protobuf.Timestamp created_at = 1;
+  string internal_id = 3;
+  string original_id = 4;
+  string name = 5;
+  string avatar = 6;
+  double popularity_index = 7;
+  bool verified = 8;
+  repeated Timeline timeline = 9;
+}
+
+message Proposal {
+  google.protobuf.Timestamp created_at = 1;
+  string id = 3;
+  string dao_internal_id = 4;
+  string author = 5;
+  string title = 6;
+  string state = 7;
+  string type = 8;
+  string privacy = 9;
+  bool spam = 10;
+  repeated Timeline timeline = 12;
+  repeated string choices = 13;
+  google.protobuf.Timestamp original_created_at = 14;
+  google.protobuf.Timestamp voting_started_at = 15;
+  google.protobuf.Timestamp voting_ended_at = 16;
+}
+
+message Delegate {
+  string address_from = 1;
+  string address_to = 2;
+  string dao_internal_id = 3;
+  string proposal_id = 4;
+  string action = 5;
+  optional google.protobuf.Timestamp due_date = 6;
+}
+
+message Vote {
+  google.protobuf.Timestamp created_at = 1;
+  string dao_internal_id = 2;
+  string proposal_id = 3;
+  string voter_address = 4;
+  string vote_id = 5;
+  google.protobuf.Any choice = 6;
+  string reason = 7;
+  float voting_power = 8;
+}
+
+message FeedItem {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+  FeedItemType type = 3;
+
+  oneof snapshot {
+    DAO dao = 10;
+    Proposal proposal = 11;
+    Delegate delegate = 12;
+    Vote vote = 13;
+  }
+}
