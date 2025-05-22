@@ -379,6 +379,17 @@ func (h *DAO) getTokenInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	convertedChains := make([]dao.TokenChainInfo, 0, len(resp.Chains))
+	for _, info := range resp.Chains {
+		convertedChains = append(convertedChains, dao.TokenChainInfo{
+			ChainID:  info.GetChainId(),
+			Name:     info.GetName(),
+			Decimals: int(info.GetDecimals()),
+			IconURL:  info.GetIconUrl(),
+			Address:  info.GetAddress(),
+		})
+	}
+
 	ti := dao.TokenInfo{
 		Name:                  resp.GetName(),
 		Symbol:                resp.GetSymbol(),
@@ -387,6 +398,8 @@ func (h *DAO) getTokenInfo(w http.ResponseWriter, r *http.Request) {
 		MarketCap:             resp.GetMarketCap(),
 		FullyDilutedValuation: resp.GetFullyDilutedValuation(),
 		Price:                 resp.GetPrice(),
+		FungibleID:            resp.GetFungibleId(),
+		Chains:                convertedChains,
 	}
 
 	w.WriteHeader(http.StatusOK)
