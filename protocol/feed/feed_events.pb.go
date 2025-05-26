@@ -7,13 +7,14 @@
 package feed
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	anypb "google.golang.org/protobuf/types/known/anypb"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
+	"reflect"
+	"sync"
+	"unsafe"
+
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/runtime/protoimpl"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -201,8 +202,8 @@ type DAO struct {
 	Name            string                 `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
 	Avatar          string                 `protobuf:"bytes,6,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	PopularityIndex float64                `protobuf:"fixed64,7,opt,name=popularity_index,json=popularityIndex,proto3" json:"popularity_index,omitempty"`
-	Verified        bool                   `protobuf:"varint,8,opt,name=verified,proto3" json:"verified,omitempty"`
-	Timeline        []*Timeline            `protobuf:"bytes,9,rep,name=timeline,proto3" json:"timeline,omitempty"`
+	Verified        bool        `protobuf:"varint,8,opt,name=verified,proto3" json:"verified,omitempty"`
+	Timeline        []*Timeline `protobuf:"bytes,9,rep,name=timeline,proto3" json:"timeline,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -303,9 +304,9 @@ type Proposal struct {
 	State             string                 `protobuf:"bytes,7,opt,name=state,proto3" json:"state,omitempty"`
 	Type              string                 `protobuf:"bytes,8,opt,name=type,proto3" json:"type,omitempty"`
 	Privacy           string                 `protobuf:"bytes,9,opt,name=privacy,proto3" json:"privacy,omitempty"`
-	Spam              bool                   `protobuf:"varint,10,opt,name=spam,proto3" json:"spam,omitempty"`
-	Timeline          []*Timeline            `protobuf:"bytes,12,rep,name=timeline,proto3" json:"timeline,omitempty"`
-	Choices           []string               `protobuf:"bytes,13,rep,name=choices,proto3" json:"choices,omitempty"`
+	Spam              bool        `protobuf:"varint,10,opt,name=spam,proto3" json:"spam,omitempty"`
+	Timeline          []*Timeline `protobuf:"bytes,12,rep,name=timeline,proto3" json:"timeline,omitempty"`
+	Choices           []string    `protobuf:"bytes,13,rep,name=choices,proto3" json:"choices,omitempty"`
 	OriginalCreatedAt *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=original_created_at,json=originalCreatedAt,proto3" json:"original_created_at,omitempty"`
 	VotingStartedAt   *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=voting_started_at,json=votingStartedAt,proto3" json:"voting_started_at,omitempty"`
 	VotingEndedAt     *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=voting_ended_at,json=votingEndedAt,proto3" json:"voting_ended_at,omitempty"`

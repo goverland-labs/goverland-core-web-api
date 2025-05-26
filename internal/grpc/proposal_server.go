@@ -6,6 +6,7 @@ import (
 
 	coredata "github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	internalpb "github.com/goverland-labs/goverland-core-web-api/protocol/storage"
+	"go.openly.dev/pointy"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -95,18 +96,47 @@ func (s *ProposalServer) GetByFilter(ctx context.Context, req *internalpb.Propos
 		Offset:      req.Offset,
 		ProposalIds: req.GetProposalIds(),
 		OnlyActive:  req.OnlyActive,
+		Level:       pointy.Pointer(convertReqLevel(req.GetLevel())),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	list := make([]*internalpb.ProposalInfo, 0, len(resp.Proposals))
-	for _, info := range resp.Proposals {
-		list = append(list, convertProposal(info))
+	result := &internalpb.ProposalByFilterResponse{
+		Proposals:      make([]*internalpb.ProposalInfo, 0, len(resp.Proposals)),
+		TotalCount:     resp.GetTotalCount(),
+		ProposalsShort: make([]*internalpb.ProposalShortInfo, 0, len(resp.ProposalsShort)),
 	}
 
-	return &internalpb.ProposalByFilterResponse{
-		Proposals:  list,
-		TotalCount: resp.GetTotalCount(),
-	}, nil
+	for _, info := range resp.Proposals {
+		result.Proposals = append(result.Proposals, convertProposal(info))
+	}
+
+	for _, info := range resp.ProposalsShort {
+		result.ProposalsShort = append(result.ProposalsShort, convertShortProposal(info))
+	}
+
+	return result, nil
+}
+
+func convertReqLevel(level internalpb.ProposalInfoLevel) coredata.ProposalInfoLevel {
+	switch level {
+	case internalpb.ProposalInfoLevel_PROPOSAL_INFO_LEVEL_SHORT:
+		return coredata.ProposalInfoLevel_PROPOSAL_INFO_LEVEL_SHORT
+	default:
+		return coredata.ProposalInfoLevel_PROPOSAL_INFO_LEVEL_FULL
+	}
+}
+
+func convertShortProposal(pr *coredata.ProposalShortInfo) *internalpb.ProposalShortInfo {
+	if pr == nil {
+		return nil
+	}
+
+	return &internalpb.ProposalShortInfo{
+		Id:      pr.GetId(),
+		Title:   pr.GetTitle(),
+		State:   pr.GetState(),
+		Created: pr.GetCreated(),
+	}
 }
