@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Extend proposals get by filters endpoint for getting short proposal info
+
 ## [0.3.3] - 2025-05-27
 
 ### Added
