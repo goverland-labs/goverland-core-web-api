@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/goverland-core-feed/protocol v0.2.1
-	github.com/goverland-labs/goverland-core-storage/protocol v0.4.17
+	github.com/goverland-labs/goverland-core-storage/protocol v0.4.19
 	github.com/goverland-labs/goverland-core-web-api/protocol v0.0.0-20250220134513-ce50ab1484b8
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0

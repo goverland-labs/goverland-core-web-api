@@ -41,6 +41,7 @@ func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/daos/{id}/token-info", h.getTokenInfo).Methods(http.MethodGet).Name("get_dao_token_info")
 	baseRouter.HandleFunc("/daos/{id}/token-chart", h.getTokenChart).Methods(http.MethodGet).Name("get_dao_token_chart")
 	baseRouter.HandleFunc("/daos/{id}/populate-token-price", h.populateTokenPrice).Methods(http.MethodPost).Name("populate_dao_token_price")
+	baseRouter.HandleFunc("/daos/update-fungible-ids", h.updateFungibleIds).Methods(http.MethodPost).Name("update_fungible_ids")
 }
 
 func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
@@ -448,6 +449,22 @@ func (h *DAO) populateTokenPrice(w http.ResponseWriter, r *http.Request) {
 		log.Error().Err(err).Fields(map[string]interface{}{
 			"id": id,
 		}).Msg("populate token price by dao id")
+		response.HandleError(response.ResolveError(err), w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(resp.Status)
+}
+
+func (h *DAO) updateFungibleIds(w http.ResponseWriter, r *http.Request) {
+	category := r.FormValue("category")
+
+	resp, err := h.dc.UpdateFungibleIds(r.Context(), &storagepb.UpdateFungibleIdsRequest{Category: category})
+	if err != nil {
+		log.Error().Err(err).Fields(map[string]interface{}{
+			"category": category,
+		}).Msg("update fungible ids")
 		response.HandleError(response.ResolveError(err), w)
 		return
 	}
