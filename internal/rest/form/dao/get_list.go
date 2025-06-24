@@ -11,17 +11,19 @@ import (
 )
 
 type GetListRequest struct {
-	Query    string
-	Category string
-	DAOs     string
+	Query       string
+	Category    string
+	DAOs        string
+	FungibleIDs string
 }
 
 type GetList struct {
 	helpers.Pagination
 
-	Query    *string
-	Category *string
-	DAOs     []string
+	Query       *string
+	Category    *string
+	DAOs        []string
+	FungibleIDs []string
 }
 
 func NewGetListForm() *GetList {
@@ -32,14 +34,16 @@ func (f *GetList) ParseAndValidate(r *http.Request) (form.Former, response.Error
 	errors := make(map[string]response.ErrorMessage)
 
 	req := GetListRequest{
-		Query:    r.FormValue("query"),
-		Category: r.FormValue("category"),
-		DAOs:     r.FormValue("daos"),
+		Query:       r.FormValue("query"),
+		Category:    r.FormValue("category"),
+		DAOs:        r.FormValue("daos"),
+		FungibleIDs: r.FormValue("fungible_ids"),
 	}
 
 	f.validateAndSetQuery(req, errors)
 	f.validateAndSetCategory(req, errors)
 	f.validateAndSetDAOs(req, errors)
+	f.validateAndSetFungibleIDs(req, errors)
 	f.ValidateAndSetPagination(r, errors)
 
 	if len(errors) > 0 {
@@ -98,4 +102,25 @@ func (f *GetList) validateAndSetDAOs(req GetListRequest, errors map[string]respo
 	}
 
 	f.DAOs = daos
+}
+
+func (f *GetList) validateAndSetFungibleIDs(req GetListRequest, errors map[string]response.ErrorMessage) {
+	idsString := strings.TrimSpace(req.FungibleIDs)
+	if idsString == "" {
+		return
+	}
+
+	ids := strings.Split(idsString, ",")
+	fungibleIDs := make([]string, 0, len(ids))
+	for i := range ids {
+		id := strings.TrimSpace(ids[i])
+		if id == "" {
+			errors[fmt.Sprintf("fungible_ids.%d", i)] = response.WrongValueError("wrong value")
+			continue
+		}
+
+		fungibleIDs = append(fungibleIDs, id)
+	}
+
+	f.FungibleIDs = fungibleIDs
 }

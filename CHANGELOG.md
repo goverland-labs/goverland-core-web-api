@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added fungible ids to get dao list
+
 ## [0.3.5] - 2025-06-19
 
 ### Added

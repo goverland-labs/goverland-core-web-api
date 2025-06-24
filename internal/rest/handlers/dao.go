@@ -174,11 +174,12 @@ func (h *DAO) getListAction(w http.ResponseWriter, r *http.Request) {
 
 	params := form.(*forms.GetList)
 	list, err := h.dc.GetByFilter(r.Context(), &storagepb.DaoByFilterRequest{
-		Query:    params.Query,
-		Category: params.Category,
-		Limit:    &params.Limit,
-		Offset:   &params.Offset,
-		DaoIds:   params.DAOs,
+		Query:       params.Query,
+		Category:    params.Category,
+		Limit:       &params.Limit,
+		Offset:      &params.Offset,
+		DaoIds:      params.DAOs,
+		FungibleIds: params.FungibleIDs,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get dao list by filter")
