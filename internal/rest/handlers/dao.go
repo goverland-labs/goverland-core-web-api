@@ -514,6 +514,7 @@ func convertToDaoFromProto(info *storagepb.DaoInfo) dao.Dao {
 		PopularityIndex:    info.GetPopularityIndex(),
 		TokenExist:         info.GetTokenExist(),
 		TokenSymbol:        info.GetTokenSymbol(),
+		FungibleID:         info.GetFungibleId(),
 	}
 }
 
