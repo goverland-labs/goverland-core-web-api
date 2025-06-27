@@ -1,5 +1,7 @@
 /.env
 /bin/*
 /goverland-core-web-api
+/core-web-api
 /vendor
 /protocol/vendor
+.idea/
