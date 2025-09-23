@@ -10,15 +10,19 @@ import (
 )
 
 type GetDelegatesRequest struct {
-	Query string
-	By    string
+	Query          string
+	By             string
+	DelegationType string
+	ChainID        string
 }
 
 type GetDelegates struct {
 	helpers.Pagination
 
-	Query *string
-	By    *string
+	Query          *string
+	By             *string
+	DelegationType *string
+	ChainID        *string
 }
 
 func NewGetDelegatesForm() *GetDelegates {
@@ -29,12 +33,16 @@ func (f *GetDelegates) ParseAndValidate(r *http.Request) (form.Former, response.
 	errors := make(map[string]response.ErrorMessage)
 
 	req := GetDelegatesRequest{
-		Query: r.FormValue("query"),
-		By:    r.FormValue("by"),
+		Query:          r.FormValue("query"),
+		By:             r.FormValue("by"),
+		DelegationType: r.FormValue("delegation_type"),
+		ChainID:        r.FormValue("chain_id"),
 	}
 
 	f.validateAndSetQuery(req, errors)
 	f.validateAndSetBy(req, errors)
+	f.validateAndSetDelegationType(req, errors)
+	f.validateAndSetChainID(req, errors)
 	f.ValidateAndSetPagination(r, errors)
 
 	if len(errors) > 0 {
@@ -71,4 +79,22 @@ func (f *GetDelegates) validateAndSetBy(req GetDelegatesRequest, _ map[string]re
 	}
 
 	f.By = &by
+}
+
+func (f *GetDelegates) validateAndSetDelegationType(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
+	val := strings.TrimSpace(req.DelegationType)
+	if val == "" {
+		return
+	}
+
+	f.DelegationType = &val
+}
+
+func (f *GetDelegates) validateAndSetChainID(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
+	value := strings.TrimSpace(req.By)
+	if value == "" {
+		return
+	}
+
+	f.ChainID = &value
 }

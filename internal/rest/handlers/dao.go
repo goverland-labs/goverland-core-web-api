@@ -10,10 +10,17 @@ import (
 	"github.com/goverland-labs/goverland-core-feed/protocol/feedpb"
 	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/rs/zerolog/log"
+	"go.openly.dev/pointy"
 
 	"github.com/goverland-labs/goverland-core-web-api/internal/response"
 	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/dao"
 	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/dao"
+)
+
+const (
+	delegationTypeSplitDelegation = "split-delegation"
+	delegationTypeDelegation      = "delegation"
+	delegationTypeErc20Votes      = "erc20-votes"
 )
 
 type DAO struct {
@@ -276,12 +283,15 @@ func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
 		qAccounts = append(qAccounts, *params.Query)
 	}
 
+	dt := convertDelegationTypeToProto(pointy.StringValue(params.DelegationType, ""))
 	resp, err := h.delegateClient.GetDelegates(r.Context(), &storagepb.GetDelegatesRequest{
-		DaoId:         daoID,
-		QueryAccounts: qAccounts,
-		Sort:          params.By,
-		Limit:         int32(params.Limit),
-		Offset:        int32(params.Offset),
+		DaoId:          daoID,
+		QueryAccounts:  qAccounts,
+		Sort:           params.By,
+		Limit:          int32(params.Limit),
+		Offset:         int32(params.Offset),
+		DelegationType: &dt,
+		ChainId:        params.ChainID,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("get dao delegates")
@@ -303,6 +313,8 @@ func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
 			Statement:             info.GetStatement(),
 			VotesCount:            info.GetVotesCount(),
 			CreatedProposalsCount: info.GetCreatedProposalsCount(),
+			DelegationType:        convertDelegationTypeToInternal(info.GetDelegationType()),
+			ChainID:               info.ChainId,
 		})
 	}
 
@@ -312,6 +324,28 @@ func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = json.NewEncoder(w).Encode(result)
+}
+
+func convertDelegationTypeToProto(value string) storagepb.DelegationType {
+	switch value {
+	case delegationTypeDelegation:
+		return storagepb.DelegationType_DELEGATION_TYPE_DELEGATION
+	case delegationTypeErc20Votes:
+		return storagepb.DelegationType_DELEGATION_TYPE_ERC20_VOTES
+	default:
+		return storagepb.DelegationType_DELEGATION_TYPE_SPLIT_DELEGATION
+	}
+}
+
+func convertDelegationTypeToInternal(value storagepb.DelegationType) string {
+	switch value {
+	case storagepb.DelegationType_DELEGATION_TYPE_DELEGATION:
+		return delegationTypeDelegation
+	case storagepb.DelegationType_DELEGATION_TYPE_ERC20_VOTES:
+		return delegationTypeErc20Votes
+	default:
+		return delegationTypeSplitDelegation
+	}
 }
 
 func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
