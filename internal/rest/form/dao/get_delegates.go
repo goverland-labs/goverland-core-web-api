@@ -91,7 +91,7 @@ func (f *GetDelegates) validateAndSetDelegationType(req GetDelegatesRequest, _ m
 }
 
 func (f *GetDelegates) validateAndSetChainID(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
-	value := strings.TrimSpace(req.By)
+	value := strings.TrimSpace(req.ChainID)
 	if value == "" {
 		return
 	}
