@@ -362,8 +362,10 @@ func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 	params := form.(*forms.GetDelegateProfile)
 
 	resp, err := h.delegateClient.GetDelegateProfile(r.Context(), &storagepb.GetDelegateProfileRequest{
-		DaoId:   daoID,
-		Address: params.Address,
+		DaoId:          daoID,
+		Address:        params.Address,
+		DelegationType: convertDelegationTypeToProto(pointy.StringValue(params.DelegationType, "")),
+		ChainId:        params.ChainID,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("get delegate profile")

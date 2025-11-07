@@ -9,11 +9,15 @@ import (
 )
 
 type GetDelegateProfileRequest struct {
-	Address string
+	Address        string
+	DelegationType string
+	ChainID        string
 }
 
 type GetDelegateProfile struct {
-	Address string
+	Address        string
+	DelegationType *string
+	ChainID        *string
 }
 
 func NewGetDelegateProfileForm() *GetDelegateProfile {
@@ -24,10 +28,14 @@ func (f *GetDelegateProfile) ParseAndValidate(r *http.Request) (form.Former, res
 	errors := make(map[string]response.ErrorMessage)
 
 	req := GetDelegateProfileRequest{
-		Address: r.FormValue("address"),
+		Address:        r.FormValue("address"),
+		DelegationType: r.FormValue("delegation_type"),
+		ChainID:        r.FormValue("chain_id"),
 	}
 
 	f.validateAndSetAddress(req, errors)
+	f.validateAndSetDelegationType(req, errors)
+	f.validateAndSetChainID(req, errors)
 
 	if len(errors) > 0 {
 		ve := response.NewValidationError(errors)
@@ -40,7 +48,9 @@ func (f *GetDelegateProfile) ParseAndValidate(r *http.Request) (form.Former, res
 
 func (f *GetDelegateProfile) ConvertToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"address": f.Address,
+		"address":         f.Address,
+		"delegation_type": f.DelegationType,
+		"chain_id":        f.ChainID,
 	}
 }
 
@@ -52,4 +62,22 @@ func (f *GetDelegateProfile) validateAndSetAddress(req GetDelegateProfileRequest
 	}
 
 	f.Address = address
+}
+
+func (f *GetDelegateProfile) validateAndSetDelegationType(req GetDelegateProfileRequest, _ map[string]response.ErrorMessage) {
+	val := strings.TrimSpace(req.DelegationType)
+	if val == "" {
+		return
+	}
+
+	f.DelegationType = &val
+}
+
+func (f *GetDelegateProfile) validateAndSetChainID(req GetDelegateProfileRequest, _ map[string]response.ErrorMessage) {
+	value := strings.TrimSpace(req.ChainID)
+	if value == "" {
+		return
+	}
+
+	f.ChainID = &value
 }
