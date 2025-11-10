@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,6 +16,7 @@ import (
 	"github.com/goverland-labs/goverland-core-web-api/internal/response"
 	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/dao"
 	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/dao"
+	"github.com/goverland-labs/goverland-core-web-api/pkg/helpers"
 )
 
 const (
@@ -45,6 +47,7 @@ func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
 	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
 	baseRouter.HandleFunc("/daos/{id}/delegates", h.getDelegates).Methods(http.MethodGet).Name("get_delegates_list")
 	baseRouter.HandleFunc("/daos/{id}/delegate-profile", h.getDelegateProfile).Methods(http.MethodGet).Name("get_delegate_profile")
+	baseRouter.HandleFunc("/daos/{id}/delegates/{address}/delegators", h.getDelegators).Methods(http.MethodGet).Name("get_delegators")
 	baseRouter.HandleFunc("/daos/{id}/token-info", h.getTokenInfo).Methods(http.MethodGet).Name("get_dao_token_info")
 	baseRouter.HandleFunc("/daos/{id}/token-chart", h.getTokenChart).Methods(http.MethodGet).Name("get_dao_token_chart")
 	baseRouter.HandleFunc("/daos/{id}/populate-token-price", h.populateTokenPrice).Methods(http.MethodPost).Name("populate_dao_token_price")
@@ -402,6 +405,61 @@ func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = json.NewEncoder(w).Encode(result)
+}
+
+func (h *DAO) getDelegators(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	daoID := vars["id"]
+	address := vars["address"]
+
+	form, verr := forms.NewGetDelegatorsForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetDelegators)
+
+	delegationType := delegationTypeSplitDelegation
+	if strings.TrimSpace(params.DelegationType) != "" {
+		delegationType = params.DelegationType
+	}
+
+	if delegationType == delegationTypeErc20Votes && strings.TrimSpace(params.ChainID) == "" {
+		response.HandleError(response.NewValidationError(map[string]response.ErrorMessage{
+			"chain_id": response.MissedValueError("chain_id is required for erc20-votes delegation type"),
+		}), w)
+
+		return
+	}
+
+	resp, err := h.delegateClient.GetDelegators(r.Context(), &storagepb.GetDelegatorsRequest{
+		DaoId:   daoID,
+		Address: address,
+		ChainId: params.ChainID,
+		Limit:   uint32(params.Limit),
+		Offset:  helpers.Ptr(uint32(params.Offset)),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get delegators")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	convertedDelegators := make([]dao.Delegator, 0, len(resp.GetList()))
+	for _, info := range resp.GetList() {
+		convertedDelegators = append(convertedDelegators, dao.Delegator{
+			Address:    info.GetAddress(),
+			ENSName:    info.GetEnsName(),
+			TokenValue: info.GetTokenValue(),
+		})
+	}
+
+	response.AddPaginationHeaders(w, params.Offset, params.Limit, uint64(resp.GetTotalCount()))
+
+	_ = json.NewEncoder(w).Encode(convertedDelegators)
 }
 
 func (h *DAO) getTokenInfo(w http.ResponseWriter, r *http.Request) {
