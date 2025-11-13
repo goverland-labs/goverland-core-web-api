@@ -335,8 +335,10 @@ func convertDelegationTypeToProto(value string) storagepb.DelegationType {
 		return storagepb.DelegationType_DELEGATION_TYPE_DELEGATION
 	case delegationTypeErc20Votes:
 		return storagepb.DelegationType_DELEGATION_TYPE_ERC20_VOTES
-	default:
+	case delegationTypeSplitDelegation:
 		return storagepb.DelegationType_DELEGATION_TYPE_SPLIT_DELEGATION
+	default:
+		return storagepb.DelegationType_DELEGATION_TYPE_UNRECOGNIZED
 	}
 }
 
