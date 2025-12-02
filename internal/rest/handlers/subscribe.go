@@ -28,11 +28,11 @@ func NewSubscribeHandler(subscribers feedpb.SubscriberClient, subscriptions feed
 	}
 }
 
-func (h *Subscriber) EnrichRoutes(baseRouter *mux.Router) {
-	baseRouter.HandleFunc("/subscribe", h.createSubscriberAction).Methods(http.MethodPost).Name("create_subscriber")
-	baseRouter.HandleFunc("/subscribe", h.updateSubscriberAction).Methods(http.MethodPut).Name("update_subscriber")
-	baseRouter.HandleFunc("/subscriptions", h.subscribeOnDaoAction).Methods(http.MethodPost).Name("create_subscription")
-	baseRouter.HandleFunc("/subscriptions", h.unsubscribeOnDaoAction).Methods(http.MethodDelete).Name("delete_subscription")
+func (h *Subscriber) EnrichRoutes(v1, _ *mux.Router) {
+	v1.HandleFunc("/subscribe", h.createSubscriberAction).Methods(http.MethodPost).Name("create_subscriber")
+	v1.HandleFunc("/subscribe", h.updateSubscriberAction).Methods(http.MethodPut).Name("update_subscriber")
+	v1.HandleFunc("/subscriptions", h.subscribeOnDaoAction).Methods(http.MethodPost).Name("create_subscription")
+	v1.HandleFunc("/subscriptions", h.unsubscribeOnDaoAction).Methods(http.MethodDelete).Name("delete_subscription")
 }
 
 func (h *Subscriber) createSubscriberAction(w http.ResponseWriter, r *http.Request) {

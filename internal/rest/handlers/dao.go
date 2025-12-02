@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,19 +38,22 @@ func NewDaoHandler(dc storagepb.DaoClient, fc feedpb.FeedClient, delegateClient 
 	}
 }
 
-func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
-	baseRouter.HandleFunc("/daos/top", h.getTopAction).Methods(http.MethodGet).Name("get_dao_top")
-	baseRouter.HandleFunc("/daos/recommendations", h.getRecommendations).Methods(http.MethodGet).Name("get_dao_recommendations")
-	baseRouter.HandleFunc("/daos/{id}/feed", h.getFeedByIDAction).Methods(http.MethodGet).Name("get_dao_feed_by_id")
-	baseRouter.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
-	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
-	baseRouter.HandleFunc("/daos/{id}/delegates", h.getDelegates).Methods(http.MethodGet).Name("get_delegates_list")
-	baseRouter.HandleFunc("/daos/{id}/delegate-profile", h.getDelegateProfile).Methods(http.MethodGet).Name("get_delegate_profile")
-	baseRouter.HandleFunc("/daos/{id}/delegates/{address}/delegators", h.getDelegators).Methods(http.MethodGet).Name("get_delegators")
-	baseRouter.HandleFunc("/daos/{id}/token-info", h.getTokenInfo).Methods(http.MethodGet).Name("get_dao_token_info")
-	baseRouter.HandleFunc("/daos/{id}/token-chart", h.getTokenChart).Methods(http.MethodGet).Name("get_dao_token_chart")
-	baseRouter.HandleFunc("/daos/{id}/populate-token-price", h.populateTokenPrice).Methods(http.MethodPost).Name("populate_dao_token_price")
-	baseRouter.HandleFunc("/daos/update-fungible-ids", h.updateFungibleIds).Methods(http.MethodPost).Name("update_fungible_ids")
+func (h *DAO) EnrichRoutes(v1, v2 *mux.Router) {
+	v1.HandleFunc("/daos/top", h.getTopAction).Methods(http.MethodGet).Name("get_dao_top")
+	v1.HandleFunc("/daos/recommendations", h.getRecommendations).Methods(http.MethodGet).Name("get_dao_recommendations")
+	v1.HandleFunc("/daos/{id}/feed", h.getFeedByIDAction).Methods(http.MethodGet).Name("get_dao_feed_by_id")
+	v1.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
+	v1.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
+	v1.HandleFunc("/daos/{id}/delegates", h.getDelegates).Methods(http.MethodGet).Name("get_delegates_list")
+	v1.HandleFunc("/daos/{id}/delegate-profile", h.getDelegateProfile).Methods(http.MethodGet).Name("get_delegate_profile")
+	v1.HandleFunc("/daos/{id}/delegates/{address}/delegators", h.getDelegators).Methods(http.MethodGet).Name("get_delegators")
+	v1.HandleFunc("/daos/{id}/token-info", h.getTokenInfo).Methods(http.MethodGet).Name("get_dao_token_info")
+	v1.HandleFunc("/daos/{id}/token-chart", h.getTokenChart).Methods(http.MethodGet).Name("get_dao_token_chart")
+	v1.HandleFunc("/daos/{id}/populate-token-price", h.populateTokenPrice).Methods(http.MethodPost).Name("populate_dao_token_price")
+	v1.HandleFunc("/daos/update-fungible-ids", h.updateFungibleIds).Methods(http.MethodPost).Name("update_fungible_ids")
+
+	v2.HandleFunc("/daos/{id}/delegates", h.getDelegatesV2).Methods(http.MethodGet).Name("get_delegates_v2_list")
+	v2.HandleFunc("/daos/{id}/delegates/{address}/delegators", h.getDelegatorsV2).Methods(http.MethodGet).Name("get_delegators_v2_list")
 }
 
 func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
@@ -422,20 +424,6 @@ func (h *DAO) getDelegators(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetDelegators)
-
-	delegationType := delegationTypeSplitDelegation
-	if strings.TrimSpace(params.DelegationType) != "" {
-		delegationType = params.DelegationType
-	}
-
-	if delegationType == delegationTypeErc20Votes && strings.TrimSpace(params.ChainID) == "" {
-		response.HandleError(response.NewValidationError(map[string]response.ErrorMessage{
-			"chain_id": response.MissedValueError("chain_id is required for erc20-votes delegation type"),
-		}), w)
-
-		return
-	}
-
 	resp, err := h.delegateClient.GetDelegators(r.Context(), &storagepb.GetDelegatorsRequest{
 		DaoId:   daoID,
 		Address: address,

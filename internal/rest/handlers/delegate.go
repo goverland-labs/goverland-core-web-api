@@ -26,12 +26,17 @@ func NewDelegateHandler(dc storagepb.DelegateClient) APIHandler {
 	}
 }
 
-func (h *Delegate) EnrichRoutes(baseRouter *mux.Router) {
-	baseRouter.HandleFunc("/user/{address}/delegates/top", h.getDelegatesByAddress).Methods(http.MethodGet).Name("get_delegates_by_address")
-	baseRouter.HandleFunc("/user/{address}/delegators/top", h.getDelegatorsByAddress).Methods(http.MethodGet).Name("get_delegators_by_address")
-	baseRouter.HandleFunc("/user/{address}/delegations/total", h.getTotalDelegations).Methods(http.MethodGet).Name("get_delegates_summary_by_address")
-	baseRouter.HandleFunc("/user/{address}/delegates/{dao_id}/list", h.getDelegatesList).Methods(http.MethodGet).Name("get_delegates_list")
-	baseRouter.HandleFunc("/user/{address}/delegators/{dao_id}/list", h.getDelegatorsList).Methods(http.MethodGet).Name("get_delegators_list")
+func (h *Delegate) EnrichRoutes(v1, v2 *mux.Router) {
+	v1.HandleFunc("/user/{address}/delegates/top", h.getDelegatesByAddress).Methods(http.MethodGet).Name("get_delegates_by_address")
+	v1.HandleFunc("/user/{address}/delegators/top", h.getDelegatorsByAddress).Methods(http.MethodGet).Name("get_delegators_by_address")
+	v1.HandleFunc("/user/{address}/delegations/total", h.getTotalDelegations).Methods(http.MethodGet).Name("get_delegates_summary_by_address")
+	v1.HandleFunc("/user/{address}/delegates/{dao_id}/list", h.getDelegatesList).Methods(http.MethodGet).Name("get_delegates_list")
+	v1.HandleFunc("/user/{address}/delegators/{dao_id}/list", h.getDelegatorsList).Methods(http.MethodGet).Name("get_delegators_list")
+
+	v2.HandleFunc("/user/{address}/delegates/top", h.getUserDelegatesTopV2).Methods(http.MethodGet).Name("get_user_delegates_top_v2")
+	v2.HandleFunc("/user/{address}/delegators/top", h.getUserDelegatorsTopV2).Methods(http.MethodGet).Name("get_user_delegates_top_v2")
+	v2.HandleFunc("/user/{address}/delegates/{dao_id}/list", h.getUserDelegatesListV2).Methods(http.MethodGet).Name("get_delegates_list")
+	v2.HandleFunc("/user/{address}/delegators/{dao_id}/list", h.getUserDelegatorsListV2).Methods(http.MethodGet).Name("get_delegators_list")
 }
 
 func (h *Delegate) getDelegatesByAddress(w http.ResponseWriter, r *http.Request) {

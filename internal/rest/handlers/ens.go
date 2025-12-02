@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
-	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/ens"
 	"net/http"
+
+	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/ens"
 
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
@@ -23,8 +24,8 @@ func NewEnsHandler(ec storagepb.EnsClient) APIHandler {
 	}
 }
 
-func (h *Ens) EnrichRoutes(baseRouter *mux.Router) {
-	baseRouter.HandleFunc("/ens-name", h.getEnsNamesAction).Methods(http.MethodGet).Name("get_ens_names")
+func (h *Ens) EnrichRoutes(v1, _ *mux.Router) {
+	v1.HandleFunc("/ens-name", h.getEnsNamesAction).Methods(http.MethodGet).Name("get_ens_names")
 }
 
 func (h *Ens) getEnsNamesAction(w http.ResponseWriter, r *http.Request) {

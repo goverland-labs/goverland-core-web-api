@@ -22,8 +22,8 @@ func NewStatsHandler(sc storagepb.StatsClient) APIHandler {
 	}
 }
 
-func (h *Stats) EnrichRoutes(baseRouter *mux.Router) {
-	baseRouter.HandleFunc("/stats/totals", h.getTotals).Methods(http.MethodGet).Name("get_stats_totals")
+func (h *Stats) EnrichRoutes(v1, _ *mux.Router) {
+	v1.HandleFunc("/stats/totals", h.getTotals).Methods(http.MethodGet).Name("get_stats_totals")
 }
 
 func (h *Stats) getTotals(w http.ResponseWriter, r *http.Request) {
