@@ -195,7 +195,7 @@ func (h *Delegate) getUserDelegatesTopV2(w http.ResponseWriter, r *http.Request)
 
 func (h *Delegate) getUserDelegatesListV2(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	daoID := vars["id"]
+	daoID := vars["dao_id"]
 	address := vars["address"]
 
 	form, verr := forms.NewGetUserDelegatesV2Form().ParseAndValidate(r)
@@ -265,7 +265,7 @@ func (h *Delegate) getUserDelegatorsTopV2(w http.ResponseWriter, r *http.Request
 
 func (h *Delegate) getUserDelegatorsListV2(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	daoID := vars["id"]
+	daoID := vars["dao_id"]
 	address := vars["address"]
 
 	form, verr := forms.NewGetUserDelegatorsV2Form().ParseAndValidate(r)
