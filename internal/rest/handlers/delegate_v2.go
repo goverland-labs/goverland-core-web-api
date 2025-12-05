@@ -275,7 +275,7 @@ func (h *Delegate) getUserDelegatorsListV2(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	params := form.(*forms.GetUserDelegatesV2)
+	params := form.(*forms.GetUserDelegatorsV2)
 
 	resp, err := h.dc.GetDelegatorsV2(r.Context(), &proto.GetDelegatorsV2Request{
 		DaoId:          daoID,
