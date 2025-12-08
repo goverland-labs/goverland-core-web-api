@@ -129,7 +129,7 @@ func (h *DAO) getDelegatorsV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := form.(*forms.GetDelegatesV2)
+	params := form.(*forms.GetDelegatorsV2)
 
 	// TODO: for now we only support one address in query
 	var qAccounts []string
