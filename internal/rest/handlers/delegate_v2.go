@@ -118,9 +118,10 @@ func convertDelegateEntryV2ToModel(entry *proto.DelegateEntryV2) *delegate.Deleg
 	}
 }
 
-func (h *DAO) getDelegatorsV2(w http.ResponseWriter, r *http.Request) {
+func (h *DAO) getUserDelegatorsV2(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	daoID := vars["id"]
+	address := vars["address"]
 
 	form, verr := forms.NewGetDelegatorsV2Form().ParseAndValidate(r)
 	if verr != nil {
@@ -130,23 +131,16 @@ func (h *DAO) getDelegatorsV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetDelegatorsV2)
-
-	// TODO: for now we only support one address in query
-	var qAccounts []string
-	if params.Query != nil {
-		qAccounts = append(qAccounts, *params.Query)
-	}
-
 	resp, err := h.delegateClient.GetDelegatorsV2(r.Context(), &proto.GetDelegatorsV2Request{
 		DaoId:          daoID,
-		QueryAccounts:  qAccounts,
+		QueryAccounts:  []string{address},
 		Limit:          int32(params.Limit),
 		Offset:         int32(params.Offset),
 		DelegationType: convertDelegationTypeToProto(pointy.StringValue(params.DelegationType, "")),
 		ChainId:        params.ChainID,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("get dao delegates v2")
+		log.Error().Err(err).Msg("get dao user delegates v2")
 		response.HandleError(response.ResolveError(err), w)
 
 		return

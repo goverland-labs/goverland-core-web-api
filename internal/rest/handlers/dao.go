@@ -53,7 +53,7 @@ func (h *DAO) EnrichRoutes(v1, v2 *mux.Router) {
 	v1.HandleFunc("/daos/update-fungible-ids", h.updateFungibleIds).Methods(http.MethodPost).Name("update_fungible_ids")
 
 	v2.HandleFunc("/daos/{id}/delegates", h.getDelegatesV2).Methods(http.MethodGet).Name("get_delegates_v2_list")
-	v2.HandleFunc("/daos/{id}/delegates/{address}/delegators", h.getDelegatorsV2).Methods(http.MethodGet).Name("get_delegators_v2_list")
+	v2.HandleFunc("/daos/{id}/delegates/{address}/delegators", h.getUserDelegatorsV2).Methods(http.MethodGet).Name("get_delegators_v2_list")
 }
 
 func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
