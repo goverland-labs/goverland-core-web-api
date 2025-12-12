@@ -140,7 +140,36 @@ func (h *DAO) getUserDelegatorsV2(w http.ResponseWriter, r *http.Request) {
 		ChainId:        params.ChainID,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("get dao user delegates v2")
+		log.Error().Err(err).Msg("get dao user delegators v2")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	list := make([]*delegate.DelegatesWrapper, 0, len(resp.List))
+	for _, v := range resp.List {
+		list = append(list, convertDelegateWrapperToModel(v))
+	}
+
+	result := delegate.GetDelegatorsV2Response{
+		List:     list,
+		TotalCnt: resp.TotalCnt,
+	}
+
+	_ = json.NewEncoder(w).Encode(result)
+}
+
+func (h *DAO) getUserDelegatorsTopV2(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	daoID := vars["id"]
+	address := vars["address"]
+
+	resp, err := h.delegateClient.GetTopDelegatorsV2(r.Context(), &proto.GetTopDelegatorsV2Request{
+		DaoId:   &daoID,
+		Address: address,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao user top delegators v2")
 		response.HandleError(response.ResolveError(err), w)
 
 		return

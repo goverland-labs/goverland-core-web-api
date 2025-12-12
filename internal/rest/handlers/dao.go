@@ -54,6 +54,7 @@ func (h *DAO) EnrichRoutes(v1, v2 *mux.Router) {
 
 	v2.HandleFunc("/daos/{id}/delegates", h.getDelegatesV2).Methods(http.MethodGet).Name("get_delegates_v2_list")
 	v2.HandleFunc("/daos/{id}/delegates/{address}/delegators", h.getUserDelegatorsV2).Methods(http.MethodGet).Name("get_delegators_v2_list")
+	v2.HandleFunc("/daos/{id}/delegates/{address}/delegators/top", h.getUserDelegatorsTopV2).Methods(http.MethodGet).Name("get_delegators_v2_top")
 }
 
 func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
