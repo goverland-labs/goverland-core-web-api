@@ -300,9 +300,14 @@ func (h *Delegate) getUserDelegatorsListV2(w http.ResponseWriter, r *http.Reques
 
 	params := form.(*forms.GetUserDelegatorsV2)
 
+	queryAccs := []string{address}
+	if params.Query != nil {
+		queryAccs = append(queryAccs, *params.Query)
+	}
+
 	resp, err := h.dc.GetDelegatorsV2(r.Context(), &proto.GetDelegatorsV2Request{
 		DaoId:          daoID,
-		QueryAccounts:  []string{address},
+		QueryAccounts:  queryAccs,
 		Limit:          int32(params.Limit),
 		Offset:         int32(params.Offset),
 		DelegationType: convertDelegationTypeToProto(pointy.StringValue(params.DelegationType, "")),
