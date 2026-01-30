@@ -9,6 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Added endpoint to resolve ENS names to addresses (`GET /ens-address`)
+- Added unit tests for identifier resolver
 
 ## [0.4.0] - 2026-02-02
 
