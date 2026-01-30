@@ -19,6 +19,7 @@ import (
 
 	"github.com/goverland-labs/goverland-core-web-api/internal/config"
 	ingrpc "github.com/goverland-labs/goverland-core-web-api/internal/grpc"
+	ihelpers "github.com/goverland-labs/goverland-core-web-api/internal/helpers"
 	"github.com/goverland-labs/goverland-core-web-api/internal/rest"
 	apihandlers "github.com/goverland-labs/goverland-core-web-api/internal/rest/handlers"
 	"github.com/goverland-labs/goverland-core-web-api/pkg/grpcsrv"
@@ -103,6 +104,7 @@ func (a *Application) initRestAPI() error {
 	ec := storagepb.NewEnsClient(storageConn)
 	sc := storagepb.NewStatsClient(storageConn)
 	delegateClient := storagepb.NewDelegateClient(storageConn)
+	resolver := ihelpers.NewIdentifierResolver(ec)
 
 	feedConn, err := grpc.NewClient(a.cfg.InternalAPI.CoreFeedAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -119,10 +121,10 @@ func (a *Application) initRestAPI() error {
 		apihandlers.NewProposalHandler(a.cpc, vc),
 		apihandlers.NewSubscribeHandler(subscriberClient, subscriptionClient),
 		apihandlers.NewFeedHandler(fc),
-		apihandlers.NewVotesHandler(vc),
+		apihandlers.NewVotesHandler(vc, resolver),
 		apihandlers.NewEnsHandler(ec),
 		apihandlers.NewStatsHandler(sc),
-		apihandlers.NewDelegateHandler(delegateClient),
+		apihandlers.NewDelegateHandler(delegateClient, resolver),
 	}
 
 	a.manager.AddWorker(process.NewServerWorker("rest-API", rest.NewRestServer(a.cfg.REST, handlers)))

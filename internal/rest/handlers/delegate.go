@@ -11,18 +11,21 @@ import (
 	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/rs/zerolog/log"
 
+	ihelpers "github.com/goverland-labs/goverland-core-web-api/internal/helpers"
 	"github.com/goverland-labs/goverland-core-web-api/internal/response"
 	"github.com/goverland-labs/goverland-core-web-api/internal/rest/form/common"
 	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/delegate"
 )
 
 type Delegate struct {
-	dc storagepb.DelegateClient
+	dc       storagepb.DelegateClient
+	resolver *ihelpers.IdentifierResolver
 }
 
-func NewDelegateHandler(dc storagepb.DelegateClient) APIHandler {
+func NewDelegateHandler(dc storagepb.DelegateClient, resolver *ihelpers.IdentifierResolver) APIHandler {
 	return &Delegate{
-		dc: dc,
+		dc:       dc,
+		resolver: resolver,
 	}
 }
 
@@ -41,7 +44,14 @@ func (h *Delegate) EnrichRoutes(v1, v2 *mux.Router) {
 
 func (h *Delegate) getDelegatesByAddress(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	address := vars["address"]
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for delegates by address")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+	address := resolved.Address
 
 	resp, err := h.dc.GetTopDelegates(r.Context(), &storagepb.GetTopDelegatesRequest{Address: address})
 	if err != nil {
@@ -60,7 +70,14 @@ func (h *Delegate) getDelegatesByAddress(w http.ResponseWriter, r *http.Request)
 
 func (h *Delegate) getDelegatorsByAddress(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	address := vars["address"]
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for delegators by address")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+	address := resolved.Address
 
 	resp, err := h.dc.GetTopDelegators(r.Context(), &storagepb.GetTopDelegatorsRequest{Address: address})
 	if err != nil {
@@ -79,7 +96,14 @@ func (h *Delegate) getDelegatorsByAddress(w http.ResponseWriter, r *http.Request
 
 func (h *Delegate) getTotalDelegations(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	address := vars["address"]
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for total delegations")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+	address := resolved.Address
 
 	resp, err := h.dc.GetDelegationSummary(r.Context(), &storagepb.GetDelegationSummaryRequest{Address: address})
 	if err != nil {
@@ -145,7 +169,14 @@ func convertToTopDelegatorsFromProto(info *storagepb.GetTopDelegatorsResponse) d
 
 func (h *Delegate) getDelegatesList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	address := vars["address"]
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for delegates list")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+	address := resolved.Address
 	daoID := vars["dao_id"]
 
 	form, verr := common.NewPagination().ParseAndValidate(r)
@@ -222,7 +253,14 @@ func convertDelegationToModel(info *storagepb.DelegationDetails) delegate.Delega
 
 func (h *Delegate) getDelegatorsList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	address := vars["address"]
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for delegators list")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+	address := resolved.Address
 	daoID := vars["dao_id"]
 
 	form, verr := common.NewPagination().ParseAndValidate(r)
