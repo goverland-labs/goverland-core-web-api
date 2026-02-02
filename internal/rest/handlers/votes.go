@@ -24,9 +24,9 @@ func NewVotesHandler(vc storagepb.VoteClient) APIHandler {
 	}
 }
 
-func (h *Votes) EnrichRoutes(baseRouter *mux.Router) {
-	baseRouter.HandleFunc("/user/{address}/votes", h.getUserVotesAction).Methods(http.MethodGet).Name("get_user_votes")
-	baseRouter.HandleFunc("/user/{address}/participated-daos", h.getUserParticipatedDaos).Methods(http.MethodGet).Name("get_user_participated_daos")
+func (h *Votes) EnrichRoutes(v1, _ *mux.Router) {
+	v1.HandleFunc("/user/{address}/votes", h.getUserVotesAction).Methods(http.MethodGet).Name("get_user_votes")
+	v1.HandleFunc("/user/{address}/participated-daos", h.getUserParticipatedDaos).Methods(http.MethodGet).Name("get_user_participated_daos")
 }
 
 func (h *Votes) getUserVotesAction(w http.ResponseWriter, r *http.Request) {

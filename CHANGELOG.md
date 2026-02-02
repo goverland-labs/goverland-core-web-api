@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-02
+
+### Changed
+- Extend getting dao delegates by the specific delegation type
+
 ## [0.3.7] - 2026-02-02
 
 ### Added

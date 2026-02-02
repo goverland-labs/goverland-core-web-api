@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/handlers"
@@ -23,11 +22,14 @@ func NewRestServer(cfg config.REST, apiHandlers []apihandlers.APIHandler) *http.
 		middleware.ResponseFormatter,
 	)
 
-	baseRouter := handler.PathPrefix(fmt.Sprintf("/%s", cfg.APIVersion)).Subrouter()
-	baseRouter.Use(middleware.Timeout(cfg.HandleTimeout))
+	baseV1Router := handler.PathPrefix("/v1").Subrouter()
+	baseV1Router.Use(middleware.Timeout(cfg.HandleTimeout))
+
+	baseV2Router := handler.PathPrefix("/v2").Subrouter()
+	baseV2Router.Use(middleware.Timeout(cfg.HandleTimeout))
 
 	for _, h := range apiHandlers {
-		h.EnrichRoutes(baseRouter)
+		h.EnrichRoutes(baseV1Router, baseV2Router)
 	}
 
 	return &http.Server{

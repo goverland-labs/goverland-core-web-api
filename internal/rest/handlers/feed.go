@@ -23,8 +23,8 @@ func NewFeedHandler(fc feedpb.FeedClient) APIHandler {
 	}
 }
 
-func (h *Feed) EnrichRoutes(baseRouter *mux.Router) {
-	baseRouter.HandleFunc("/feed", h.getFeedByFiltersAction).Methods(http.MethodPost).Name("get_feed_by_filters")
+func (h *Feed) EnrichRoutes(v1, _ *mux.Router) {
+	v1.HandleFunc("/feed", h.getFeedByFiltersAction).Methods(http.MethodPost).Name("get_feed_by_filters")
 }
 
 func (h *Feed) getFeedByFiltersAction(w http.ResponseWriter, r *http.Request) {

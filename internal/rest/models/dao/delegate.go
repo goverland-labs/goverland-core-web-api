@@ -20,6 +20,8 @@ type Delegate struct {
 	Statement             string  `json:"statement"`
 	VotesCount            int32   `json:"votes_count"`
 	CreatedProposalsCount int32   `json:"created_proposals_count"`
+	DelegationType        string  `json:"delegation_type"`
+	ChainID               *string `json:"chain_id"`
 }
 
 type DelegateProfile struct {

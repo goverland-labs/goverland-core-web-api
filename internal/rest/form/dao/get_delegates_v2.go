@@ -9,14 +9,14 @@ import (
 	helpers "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/common"
 )
 
-type GetDelegatesRequest struct {
+type GetDelegatesV2Request struct {
 	Query          string
 	By             string
 	DelegationType string
 	ChainID        string
 }
 
-type GetDelegates struct {
+type GetDelegatesV2 struct {
 	helpers.Pagination
 
 	Query          *string
@@ -25,11 +25,11 @@ type GetDelegates struct {
 	ChainID        *string
 }
 
-func NewGetDelegatesForm() *GetDelegates {
-	return &GetDelegates{}
+func NewGetDelegatesV2Form() *GetDelegatesV2 {
+	return &GetDelegatesV2{}
 }
 
-func (f *GetDelegates) ParseAndValidate(r *http.Request) (form.Former, response.Error) {
+func (f *GetDelegatesV2) ParseAndValidate(r *http.Request) (form.Former, response.Error) {
 	errors := make(map[string]response.ErrorMessage)
 
 	req := GetDelegatesRequest{
@@ -54,7 +54,7 @@ func (f *GetDelegates) ParseAndValidate(r *http.Request) (form.Former, response.
 	return f, nil
 }
 
-func (f *GetDelegates) ConvertToMap() map[string]interface{} {
+func (f *GetDelegatesV2) ConvertToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"query":  f.Query,
 		"by":     f.By,
@@ -63,7 +63,7 @@ func (f *GetDelegates) ConvertToMap() map[string]interface{} {
 	}
 }
 
-func (f *GetDelegates) validateAndSetQuery(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
+func (f *GetDelegatesV2) validateAndSetQuery(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
 	query := strings.TrimSpace(req.Query)
 	if query == "" {
 		return
@@ -72,7 +72,7 @@ func (f *GetDelegates) validateAndSetQuery(req GetDelegatesRequest, _ map[string
 	f.Query = &query
 }
 
-func (f *GetDelegates) validateAndSetBy(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
+func (f *GetDelegatesV2) validateAndSetBy(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
 	by := strings.TrimSpace(req.By)
 	if by == "" {
 		return
@@ -81,7 +81,7 @@ func (f *GetDelegates) validateAndSetBy(req GetDelegatesRequest, _ map[string]re
 	f.By = &by
 }
 
-func (f *GetDelegates) validateAndSetDelegationType(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
+func (f *GetDelegatesV2) validateAndSetDelegationType(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
 	val := strings.TrimSpace(req.DelegationType)
 	if val == "" {
 		return
@@ -90,7 +90,7 @@ func (f *GetDelegates) validateAndSetDelegationType(req GetDelegatesRequest, _ m
 	f.DelegationType = &val
 }
 
-func (f *GetDelegates) validateAndSetChainID(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
+func (f *GetDelegatesV2) validateAndSetChainID(req GetDelegatesRequest, _ map[string]response.ErrorMessage) {
 	value := strings.TrimSpace(req.ChainID)
 	if value == "" {
 		return

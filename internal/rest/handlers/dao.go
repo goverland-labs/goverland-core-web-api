@@ -10,10 +10,18 @@ import (
 	"github.com/goverland-labs/goverland-core-feed/protocol/feedpb"
 	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/rs/zerolog/log"
+	"go.openly.dev/pointy"
 
 	"github.com/goverland-labs/goverland-core-web-api/internal/response"
 	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/dao"
 	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/dao"
+	"github.com/goverland-labs/goverland-core-web-api/pkg/helpers"
+)
+
+const (
+	delegationTypeSplitDelegation = "split-delegation"
+	delegationTypeDelegation      = "delegation"
+	delegationTypeErc20Votes      = "erc20-votes"
 )
 
 type DAO struct {
@@ -30,18 +38,23 @@ func NewDaoHandler(dc storagepb.DaoClient, fc feedpb.FeedClient, delegateClient 
 	}
 }
 
-func (h *DAO) EnrichRoutes(baseRouter *mux.Router) {
-	baseRouter.HandleFunc("/daos/top", h.getTopAction).Methods(http.MethodGet).Name("get_dao_top")
-	baseRouter.HandleFunc("/daos/recommendations", h.getRecommendations).Methods(http.MethodGet).Name("get_dao_recommendations")
-	baseRouter.HandleFunc("/daos/{id}/feed", h.getFeedByIDAction).Methods(http.MethodGet).Name("get_dao_feed_by_id")
-	baseRouter.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
-	baseRouter.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
-	baseRouter.HandleFunc("/daos/{id}/delegates", h.getDelegates).Methods(http.MethodGet).Name("get_delegates_list")
-	baseRouter.HandleFunc("/daos/{id}/delegate-profile", h.getDelegateProfile).Methods(http.MethodGet).Name("get_delegate_profile")
-	baseRouter.HandleFunc("/daos/{id}/token-info", h.getTokenInfo).Methods(http.MethodGet).Name("get_dao_token_info")
-	baseRouter.HandleFunc("/daos/{id}/token-chart", h.getTokenChart).Methods(http.MethodGet).Name("get_dao_token_chart")
-	baseRouter.HandleFunc("/daos/{id}/populate-token-price", h.populateTokenPrice).Methods(http.MethodPost).Name("populate_dao_token_price")
-	baseRouter.HandleFunc("/daos/update-fungible-ids", h.updateFungibleIds).Methods(http.MethodPost).Name("update_fungible_ids")
+func (h *DAO) EnrichRoutes(v1, v2 *mux.Router) {
+	v1.HandleFunc("/daos/top", h.getTopAction).Methods(http.MethodGet).Name("get_dao_top")
+	v1.HandleFunc("/daos/recommendations", h.getRecommendations).Methods(http.MethodGet).Name("get_dao_recommendations")
+	v1.HandleFunc("/daos/{id}/feed", h.getFeedByIDAction).Methods(http.MethodGet).Name("get_dao_feed_by_id")
+	v1.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
+	v1.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
+	v1.HandleFunc("/daos/{id}/delegates", h.getDelegates).Methods(http.MethodGet).Name("get_delegates_list")
+	v1.HandleFunc("/daos/{id}/delegate-profile", h.getDelegateProfile).Methods(http.MethodGet).Name("get_delegate_profile")
+	v1.HandleFunc("/daos/{id}/delegates/{address}/delegators", h.getDelegators).Methods(http.MethodGet).Name("get_delegators")
+	v1.HandleFunc("/daos/{id}/token-info", h.getTokenInfo).Methods(http.MethodGet).Name("get_dao_token_info")
+	v1.HandleFunc("/daos/{id}/token-chart", h.getTokenChart).Methods(http.MethodGet).Name("get_dao_token_chart")
+	v1.HandleFunc("/daos/{id}/populate-token-price", h.populateTokenPrice).Methods(http.MethodPost).Name("populate_dao_token_price")
+	v1.HandleFunc("/daos/update-fungible-ids", h.updateFungibleIds).Methods(http.MethodPost).Name("update_fungible_ids")
+
+	v2.HandleFunc("/daos/{id}/delegates", h.getDelegatesV2).Methods(http.MethodGet).Name("get_delegates_v2_list")
+	v2.HandleFunc("/daos/{id}/delegates/{address}/delegators", h.getUserDelegatorsV2).Methods(http.MethodGet).Name("get_delegators_v2_list")
+	v2.HandleFunc("/daos/{id}/delegates/{address}/delegators/top", h.getUserDelegatorsTopV2).Methods(http.MethodGet).Name("get_delegators_v2_top")
 }
 
 func (h *DAO) getByIDAction(w http.ResponseWriter, r *http.Request) {
@@ -276,12 +289,15 @@ func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
 		qAccounts = append(qAccounts, *params.Query)
 	}
 
+	dt := convertDelegationTypeToProto(pointy.StringValue(params.DelegationType, ""))
 	resp, err := h.delegateClient.GetDelegates(r.Context(), &storagepb.GetDelegatesRequest{
-		DaoId:         daoID,
-		QueryAccounts: qAccounts,
-		Sort:          params.By,
-		Limit:         int32(params.Limit),
-		Offset:        int32(params.Offset),
+		DaoId:          daoID,
+		QueryAccounts:  qAccounts,
+		Sort:           params.By,
+		Limit:          int32(params.Limit),
+		Offset:         int32(params.Offset),
+		DelegationType: &dt,
+		ChainId:        params.ChainID,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("get dao delegates")
@@ -303,6 +319,8 @@ func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
 			Statement:             info.GetStatement(),
 			VotesCount:            info.GetVotesCount(),
 			CreatedProposalsCount: info.GetCreatedProposalsCount(),
+			DelegationType:        convertDelegationTypeToInternal(info.GetDelegationType()),
+			ChainID:               info.ChainId,
 		})
 	}
 
@@ -312,6 +330,30 @@ func (h *DAO) getDelegates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = json.NewEncoder(w).Encode(result)
+}
+
+func convertDelegationTypeToProto(value string) storagepb.DelegationType {
+	switch value {
+	case delegationTypeDelegation:
+		return storagepb.DelegationType_DELEGATION_TYPE_DELEGATION
+	case delegationTypeErc20Votes:
+		return storagepb.DelegationType_DELEGATION_TYPE_ERC20_VOTES
+	case delegationTypeSplitDelegation:
+		return storagepb.DelegationType_DELEGATION_TYPE_SPLIT_DELEGATION
+	default:
+		return storagepb.DelegationType_DELEGATION_TYPE_UNRECOGNIZED
+	}
+}
+
+func convertDelegationTypeToInternal(value storagepb.DelegationType) string {
+	switch value {
+	case storagepb.DelegationType_DELEGATION_TYPE_DELEGATION:
+		return delegationTypeDelegation
+	case storagepb.DelegationType_DELEGATION_TYPE_ERC20_VOTES:
+		return delegationTypeErc20Votes
+	default:
+		return delegationTypeSplitDelegation
+	}
 }
 
 func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
@@ -328,8 +370,10 @@ func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 	params := form.(*forms.GetDelegateProfile)
 
 	resp, err := h.delegateClient.GetDelegateProfile(r.Context(), &storagepb.GetDelegateProfileRequest{
-		DaoId:   daoID,
-		Address: params.Address,
+		DaoId:          daoID,
+		Address:        params.Address,
+		DelegationType: convertDelegationTypeToProto(pointy.StringValue(params.DelegationType, "")),
+		ChainId:        params.ChainID,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("get delegate profile")
@@ -366,6 +410,47 @@ func (h *DAO) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = json.NewEncoder(w).Encode(result)
+}
+
+func (h *DAO) getDelegators(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	daoID := vars["id"]
+	address := vars["address"]
+
+	form, verr := forms.NewGetDelegatorsForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetDelegators)
+	resp, err := h.delegateClient.GetDelegators(r.Context(), &storagepb.GetDelegatorsRequest{
+		DaoId:   daoID,
+		Address: address,
+		ChainId: params.ChainID,
+		Limit:   uint32(params.Limit),
+		Offset:  helpers.Ptr(uint32(params.Offset)),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get delegators")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	convertedDelegators := make([]dao.Delegator, 0, len(resp.GetList()))
+	for _, info := range resp.GetList() {
+		convertedDelegators = append(convertedDelegators, dao.Delegator{
+			Address:    info.GetAddress(),
+			ENSName:    info.GetEnsName(),
+			TokenValue: info.GetTokenValue(),
+		})
+	}
+
+	response.AddPaginationHeaders(w, params.Offset, params.Limit, uint64(resp.GetTotalCount()))
+
+	_ = json.NewEncoder(w).Encode(convertedDelegators)
 }
 
 func (h *DAO) getTokenInfo(w http.ResponseWriter, r *http.Request) {
