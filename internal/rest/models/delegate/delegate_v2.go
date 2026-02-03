@@ -29,7 +29,7 @@ type (
 		DelegationType string             `json:"delegation_type"`
 		ChainId        *string            `json:"chain_id,omitempty"`
 		TotalCnt       int32              `json:"total_cnt"`
-		Delegates      []*DelegateEntryV2 `json:"delegates"`
+		Delegates      []*DelegateEntryV2 `json:"list"`
 	}
 
 	GetDelegatesV2Response struct {
