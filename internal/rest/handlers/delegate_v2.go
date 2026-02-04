@@ -190,7 +190,14 @@ func (h *DAO) getUserDelegatorsTopV2(w http.ResponseWriter, r *http.Request) {
 
 func (h *Delegate) getUserDelegatesTopV2(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	address := vars["address"]
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for user delegates top v2")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+	address := resolved.Address
 
 	resp, err := h.dc.GetTopDelegatesV2(r.Context(), &proto.GetTopDelegatesV2Request{Address: address})
 	if err != nil {
@@ -218,8 +225,15 @@ func (h *Delegate) getUserDelegatesTopV2(w http.ResponseWriter, r *http.Request)
 
 func (h *Delegate) getUserDelegatesListV2(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for user delegates list v2")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
 	daoID := vars["dao_id"]
-	address := vars["address"]
+	address := resolved.Address
 
 	form, verr := forms.NewGetUserDelegatesV2Form().ParseAndValidate(r)
 	if verr != nil {
@@ -260,7 +274,14 @@ func (h *Delegate) getUserDelegatesListV2(w http.ResponseWriter, r *http.Request
 
 func (h *Delegate) getUserDelegatorsTopV2(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	address := vars["address"]
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for user delegators top v2")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+	address := resolved.Address
 
 	resp, err := h.dc.GetTopDelegatorsV2(r.Context(), &proto.GetTopDelegatorsV2Request{Address: address})
 	if err != nil {
@@ -288,8 +309,15 @@ func (h *Delegate) getUserDelegatorsTopV2(w http.ResponseWriter, r *http.Request
 
 func (h *Delegate) getUserDelegatorsListV2(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for user delegators list v2")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
 	daoID := vars["dao_id"]
-	address := vars["address"]
+	address := resolved.Address
 
 	form, verr := forms.NewGetUserDelegatorsV2Form().ParseAndValidate(r)
 	if verr != nil {

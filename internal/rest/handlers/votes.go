@@ -9,18 +9,21 @@ import (
 	"github.com/goverland-labs/goverland-core-storage/protocol/storagepb"
 	"github.com/rs/zerolog/log"
 
+	ihelpers "github.com/goverland-labs/goverland-core-web-api/internal/helpers"
 	"github.com/goverland-labs/goverland-core-web-api/internal/response"
 	forms "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/common"
 	"github.com/goverland-labs/goverland-core-web-api/internal/rest/models/proposal"
 )
 
 type Votes struct {
-	vc storagepb.VoteClient
+	vc       storagepb.VoteClient
+	resolver *ihelpers.IdentifierResolver
 }
 
-func NewVotesHandler(vc storagepb.VoteClient) APIHandler {
+func NewVotesHandler(vc storagepb.VoteClient, resolver *ihelpers.IdentifierResolver) APIHandler {
 	return &Votes{
-		vc: vc,
+		vc:       vc,
+		resolver: resolver,
 	}
 }
 
@@ -31,7 +34,14 @@ func (h *Votes) EnrichRoutes(v1, _ *mux.Router) {
 
 func (h *Votes) getUserVotesAction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	address := vars["address"]
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for user votes")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+	address := resolved.Address
 
 	form, verr := forms.NewGetUserVotesForm().ParseAndValidate(r)
 	if verr != nil {
@@ -41,7 +51,7 @@ func (h *Votes) getUserVotesAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := form.(*forms.GetUserVotes)
-	var list, err = h.vc.GetVotes(r.Context(), &storagepb.VotesFilterRequest{
+	list, err := h.vc.GetVotes(r.Context(), &storagepb.VotesFilterRequest{
 		ProposalIds: params.Proposals,
 		Voter:       &address,
 		Limit:       &params.Limit,
@@ -68,9 +78,16 @@ func (h *Votes) getUserVotesAction(w http.ResponseWriter, r *http.Request) {
 
 func (h *Votes) getUserParticipatedDaos(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	address := vars["address"]
+	resolved, err := h.resolver.Resolve(r.Context(), vars["address"])
+	if err != nil {
+		log.Error().Err(err).Str("identifier", vars["address"]).Msg("resolve identifier for participated daos")
+		response.HandleError(response.ResolveError(err), w)
 
-	var list, err = h.vc.GetDaosVotedIn(r.Context(), &storagepb.DaosVotedInRequest{
+		return
+	}
+	address := resolved.Address
+
+	list, err := h.vc.GetDaosVotedIn(r.Context(), &storagepb.DaosVotedInRequest{
 		Voter: address,
 	})
 	if err != nil {

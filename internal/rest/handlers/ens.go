@@ -26,6 +26,7 @@ func NewEnsHandler(ec storagepb.EnsClient) APIHandler {
 
 func (h *Ens) EnrichRoutes(v1, _ *mux.Router) {
 	v1.HandleFunc("/ens-name", h.getEnsNamesAction).Methods(http.MethodGet).Name("get_ens_names")
+	v1.HandleFunc("/ens-address", h.getAddressesByNamesAction).Methods(http.MethodGet).Name("get_addresses_by_names")
 }
 
 func (h *Ens) getEnsNamesAction(w http.ResponseWriter, r *http.Request) {
@@ -42,6 +43,33 @@ func (h *Ens) getEnsNamesAction(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get ens names")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	resp := make([]ens.EnsName, len(list.GetEnsNames()))
+	for i, info := range list.GetEnsNames() {
+		resp[i] = convertToEnsNameFromProto(info)
+	}
+
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func (h *Ens) getAddressesByNamesAction(w http.ResponseWriter, r *http.Request) {
+	form, ferr := forms.NewGetAddressesByNamesForm().ParseAndValidate(r)
+	if ferr != nil {
+		response.HandleError(ferr, w)
+
+		return
+	}
+
+	params := form.(*forms.GetAddressesByNames)
+	list, err := h.ec.GetAddressesByEnsNames(r.Context(), &storagepb.AddressesByEnsNamesRequest{
+		Names: params.Names,
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("get addresses by ens names")
 		response.HandleError(response.ResolveError(err), w)
 
 		return
