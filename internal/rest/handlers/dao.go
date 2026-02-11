@@ -43,7 +43,7 @@ func (h *DAO) EnrichRoutes(v1, v2 *mux.Router) {
 	v1.HandleFunc("/daos/recommendations", h.getRecommendations).Methods(http.MethodGet).Name("get_dao_recommendations")
 	v1.HandleFunc("/daos/{id}/feed", h.getFeedByIDAction).Methods(http.MethodGet).Name("get_dao_feed_by_id")
 	v1.HandleFunc("/daos/{id}", h.getByIDAction).Methods(http.MethodGet).Name("get_dao_by_id")
-	v1.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet).Name("get_dao_list")
+	v1.HandleFunc("/daos", h.getListAction).Methods(http.MethodGet, http.MethodPost).Name("get_dao_list")
 	v1.HandleFunc("/daos/{id}/delegates", h.getDelegates).Methods(http.MethodGet).Name("get_delegates_list")
 	v1.HandleFunc("/daos/{id}/delegate-profile", h.getDelegateProfile).Methods(http.MethodGet).Name("get_delegate_profile")
 	v1.HandleFunc("/daos/{id}/delegates/{address}/delegators", h.getDelegators).Methods(http.MethodGet).Name("get_delegators")

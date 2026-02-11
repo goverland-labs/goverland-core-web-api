@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Allow getting dao list by POST
+
 ## [0.4.1] - 2026-02-04
 
 ### Added
