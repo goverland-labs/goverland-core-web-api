@@ -15,15 +15,15 @@ import (
 type GetListRequest struct {
 	Query       string
 	Category    string
-	DAOs        string
-	FungibleIDs string
+	DAOs        any
+	FungibleIDs any
 }
 
 type GetListRequestParams struct {
-	Query       string `json:"query"`
-	Category    string `json:"category"`
-	DAOs        string `json:"daos"`
-	FungibleIDs string `json:"fungible_ids"`
+	Query       string   `json:"query,omitempty"`
+	Category    string   `json:"category,omitempty"`
+	DAOs        []string `json:"daos,omitempty"`
+	FungibleIDs []string `json:"fungible_ids"`
 }
 
 type GetList struct {
@@ -112,7 +112,13 @@ func (f *GetList) validateAndSetCategory(req GetListRequest, _ map[string]respon
 }
 
 func (f *GetList) validateAndSetDAOs(req GetListRequest, errors map[string]response.ErrorMessage) {
-	idsString := strings.TrimSpace(req.DAOs)
+	if val, ok := req.DAOs.([]string); ok {
+		f.DAOs = val
+
+		return
+	}
+
+	idsString := strings.TrimSpace(req.DAOs.(string))
 	if idsString == "" {
 		return
 	}
@@ -134,7 +140,13 @@ func (f *GetList) validateAndSetDAOs(req GetListRequest, errors map[string]respo
 }
 
 func (f *GetList) validateAndSetFungibleIDs(req GetListRequest, errors map[string]response.ErrorMessage) {
-	idsString := strings.TrimSpace(req.FungibleIDs)
+	if val, ok := req.FungibleIDs.([]string); ok {
+		f.FungibleIDs = val
+
+		return
+	}
+
+	idsString := strings.TrimSpace(req.FungibleIDs.(string))
 	if idsString == "" {
 		return
 	}
