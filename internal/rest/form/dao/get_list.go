@@ -1,11 +1,13 @@
 package dao
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/goverland-labs/goverland-core-web-api/internal/response"
+	"github.com/goverland-labs/goverland-core-web-api/internal/response/errs"
 	"github.com/goverland-labs/goverland-core-web-api/internal/rest/form"
 	helpers "github.com/goverland-labs/goverland-core-web-api/internal/rest/form/common"
 )
@@ -13,8 +15,15 @@ import (
 type GetListRequest struct {
 	Query       string
 	Category    string
-	DAOs        string
-	FungibleIDs string
+	DAOs        any
+	FungibleIDs any
+}
+
+type GetListRequestParams struct {
+	Query       string   `json:"query,omitempty"`
+	Category    string   `json:"category,omitempty"`
+	DAOs        []string `json:"daos,omitempty"`
+	FungibleIDs []string `json:"fungible_ids"`
 }
 
 type GetList struct {
@@ -31,14 +40,34 @@ func NewGetListForm() *GetList {
 }
 
 func (f *GetList) ParseAndValidate(r *http.Request) (form.Former, response.Error) {
-	errors := make(map[string]response.ErrorMessage)
+	var req GetListRequest
 
-	req := GetListRequest{
-		Query:       r.FormValue("query"),
-		Category:    r.FormValue("category"),
-		DAOs:        r.FormValue("daos"),
-		FungibleIDs: r.FormValue("fungible_ids"),
+	if r.Method == http.MethodPost {
+		var params *GetListRequestParams
+		err := json.NewDecoder(r.Body).Decode(&params)
+		if err != nil {
+			ve := response.NewValidationError()
+			ve.SetError(response.GeneralErrorKey, errs.InvalidRequestStructure, "invalid request structure")
+
+			return nil, ve
+		}
+
+		req = GetListRequest{
+			Query:       params.Query,
+			Category:    params.Category,
+			DAOs:        params.DAOs,
+			FungibleIDs: params.FungibleIDs,
+		}
+	} else {
+		req = GetListRequest{
+			Query:       r.FormValue("query"),
+			Category:    r.FormValue("category"),
+			DAOs:        r.FormValue("daos"),
+			FungibleIDs: r.FormValue("fungible_ids"),
+		}
 	}
+
+	errors := make(map[string]response.ErrorMessage)
 
 	f.validateAndSetQuery(req, errors)
 	f.validateAndSetCategory(req, errors)
@@ -83,7 +112,13 @@ func (f *GetList) validateAndSetCategory(req GetListRequest, _ map[string]respon
 }
 
 func (f *GetList) validateAndSetDAOs(req GetListRequest, errors map[string]response.ErrorMessage) {
-	idsString := strings.TrimSpace(req.DAOs)
+	if val, ok := req.DAOs.([]string); ok {
+		f.DAOs = val
+
+		return
+	}
+
+	idsString := strings.TrimSpace(req.DAOs.(string))
 	if idsString == "" {
 		return
 	}
@@ -105,7 +140,13 @@ func (f *GetList) validateAndSetDAOs(req GetListRequest, errors map[string]respo
 }
 
 func (f *GetList) validateAndSetFungibleIDs(req GetListRequest, errors map[string]response.ErrorMessage) {
-	idsString := strings.TrimSpace(req.FungibleIDs)
+	if val, ok := req.FungibleIDs.([]string); ok {
+		f.FungibleIDs = val
+
+		return
+	}
+
+	idsString := strings.TrimSpace(req.FungibleIDs.(string))
 	if idsString == "" {
 		return
 	}
