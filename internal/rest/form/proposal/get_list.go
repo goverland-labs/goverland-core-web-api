@@ -17,6 +17,7 @@ type GetList struct {
 	Title      string
 	Proposals  []string
 	OnlyActive bool
+	OrderBy    string
 }
 
 func NewGetListForm() *GetList {
@@ -30,6 +31,7 @@ func (f *GetList) ParseAndValidate(r *http.Request) (form.Former, response.Error
 	f.Category = r.FormValue("category")
 	f.Title = r.FormValue("title")
 	f.OnlyActive = r.FormValue("only_active") == "true"
+	f.OrderBy = r.FormValue("order_by")
 	idsString := strings.TrimSpace(r.FormValue("proposals"))
 	if idsString != "" {
 		ids := strings.Split(idsString, ",")
