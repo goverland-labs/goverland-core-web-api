@@ -71,6 +71,7 @@ func (h *Proposal) getListAction(w http.ResponseWriter, r *http.Request) {
 		Limit:       &params.Limit,
 		Offset:      &params.Offset,
 		Title:       &params.Title,
+		Order:       &params.OrderBy,
 		ProposalIds: params.Proposals,
 		OnlyActive:  &params.OnlyActive,
 	})
